@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Oracle Hub | GenYons Premium Analytics</title>
+    <style>
+        :root { --primary: #38bdf8; --bg: #020617; --card: #0f172a; --accent: #fbbf24; --success: #22c55e; --vip: #f59e0b; }
+        body { background: var(--bg); color: #f8fafc; font-family: sans-serif; margin: 0; padding: 0; line-height: 1.6; }
+        .affiliate-bar { background: linear-gradient(90deg, #1e40af, #1e3a8a); color: white; text-align: center; padding: 12px; font-size: 0.85rem; position: sticky; top: 0; z-index: 1000; border-bottom: 2px solid var(--accent); }
+        .promo-box { background: var(--accent); color: #000; padding: 2px 10px; border-radius: 5px; font-weight: bold; cursor: pointer; border: 2px dashed #000; display: inline-block; margin-right: 5px; }
+        header { text-align: center; padding: 25px 0; border-bottom: 1px solid #1e293b; background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(10px); }
+        .section-title { color: var(--primary); font-size: 1.2rem; margin: 30px 15px 10px; border-right: 4px solid var(--accent); padding-right: 12px; font-weight: bold; }
+        .grid { display: grid; grid-template-columns: 1fr; gap: 20px; padding: 15px; }
+        .card { background: var(--card); border: 1px solid #1e293b; border-radius: 16px; padding: 20px; position: relative; transition: 0.3s; }
+        .vip-card { border: 2px solid var(--vip); background: linear-gradient(145deg, #0f172a, #1e1b4b); box-shadow: 0 0 20px rgba(245, 158, 11, 0.15); }
+        .vip-badge { position: absolute; top: 0; left: 0; background: var(--vip); color: #000; font-size: 0.65rem; padding: 5px 15px; font-weight: bold; border-bottom-right-radius: 15px; text-transform: uppercase; }
+        .locked-content { filter: blur(6px); opacity: 0.4; user-select: none; pointer-events: none; transition: 0.6s ease; margin: 15px 0; padding: 12px; background: #000; border-radius: 10px; border-right: 3px solid var(--vip); }
+        .confidence-container { margin-top: 10px; display: none; }
+        .confidence-bar { background: #1e293b; height: 8px; border-radius: 4px; overflow: hidden; margin-top: 5px; }
+        .confidence-fill { background: var(--vip); height: 100%; width: 0%; transition: width 1.5s ease-in-out; }
+        .unlock-btn { background: var(--vip); color: #000; border: none; padding: 14px; width: 100%; border-radius: 10px; font-weight: bold; cursor: pointer; margin-top: 10px; display: flex; justify-content: center; align-items: center; gap: 8px; }
+        .teams { display: flex; align-items: center; justify-content: center; margin: 15px 0; font-weight: bold; font-size: 1.3rem; }
+        .vs { color: var(--accent); margin: 0 15px; font-size: 0.8rem; background: #1e293b; padding: 4px 10px; border-radius: 6px; }
+        .bet-button { display: block; background: var(--success); color: white; text-align: center; padding: 14px; margin-top: 15px; border-radius: 10px; text-decoration: none; font-weight: bold; transition: 0.3s; }
+        .loader { width: 18px; height: 18px; border: 3px solid #000; border-bottom-color: transparent; border-radius: 50%; display: inline-block; animation: rotation 1s linear infinite; display: none; }
+        @keyframes rotation { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        footer { background: #020617; text-align: center; padding: 50px 20px; border-top: 1px solid #1e293b; margin-top: 40px; }
+        .footer-warning { color: #f87171; font-weight: bold; font-size: 0.9rem; margin-bottom: 20px; display: block; border: 1px solid #f87171; width: fit-content; margin: 0 auto 20px; padding: 4px 15px; border-radius: 6px; }
+        .dev-tag { color: var(--primary); font-weight: bold; letter-spacing: 1px; }
+    </style>
+</head>
+<body>
+
+<div class="affiliate-bar">
+    🎁 عرض خاص: بونص 100% | انسخ كود VIP: <span class="promo-box" onclick="copyPromo()">Yons26</span>
+</div>
+
+<header>
+    <div id="google_translate_element"></div>
+    <div style="font-size: 2rem; font-weight: 900; letter-spacing: 3px; color: white;">◈ ORACLE HUB ◈</div>
+    <p style="font-size: 0.8rem; color: var(--primary);">AI-Powered Sports Intelligence by GenYons</p>
+</header>
+
+<div class="section-title" style="color: var(--vip);">👑 Oracle VIP Deep Analysis</div>
+<div id="vip-grid" class="grid"></div>
+
+<div class="section-title">🚀 Oracle Quick Tips (تحليل سريع)</div>
+<div id="tips-grid" class="grid"></div>
+
+<footer>
+    <span class="footer-warning">🔞 +18 | Gamble Responsibly</span>
+    <p class="copyright" style="color: #64748b; font-size: 0.85rem;">
+        جميع الحقوق محفوظة © 2026<br>
+        <span class="dev-tag">المطور: GenYons Intelligence Hub</span>
+    </p>
+</footer>
+
+<script>
+/**
+ * ◈ ORACLE HUB CORE ENGINE ◈
+ * Developed by: GenYons Intelligence
+ * Version: 2.0 (SaaS Ready)
+ */
+
+// 1. نظام الحماية الذكي (Cyber Firewall)
+(function() {
+    const _0x_allowed = "genyons.github.io"; 
+    // السماح بالتشغيل على الدومين الرسمي أو محلياً للتطوير
+    if (window.location.hostname !== _0x_allowed && window.location.hostname !== "localhost" && window.location.hostname !== "") {
+        document.body.style.filter = "grayscale(100%) blur(15px)";
+        document.body.style.pointerEvents = "none";
+        alert("Security Error: Unauthorized Access to Oracle Core.");
+    }
+})();
+
+// 2. بيانات الهوية والتواصل (Instagram Direct)
+const _0x_data = {
+    _u: "aHR0cHM6Ly93d3cuaW5zdGFncmFtLmNvbS9kaXJlY3QvdC8xNzg0NjU4MTQ1Nzc2Mjc0MS8/aGw9YXI=", // رابط Direct مشفر
+    _p: "WW9uczI2" // كود Yons26
+};
+const _decode = (s) => atob(s);
+
+// 3. المحرك المطور لجلب البيانات من matches.json
+async function loadOracleData() {
+    try {
+        const response = await fetch('matches.json');
+        if (!response.ok) throw new Error("Database not reached");
+        const matches = await response.json();
+        renderMatches(matches);
+    } catch (error) {
+        console.error("Oracle Error:", error);
+        document.getElementById('vip-grid').innerHTML = 
+            `<div style='grid-column: 1/-1; text-align:center; padding:20px; color:#f87171;'>
+                ⚠️ عذراً شريكنا.. فشل الاتصال بقاعدة بيانات أوراكل. تأكد من وجود ملف matches.json بجانب الملف الحالي.
+            </div>`;
+    }
+}
+
+// 4. دالة توزيع المباريات وبناء الواجهة
+function renderMatches(data) {
+    const vipGrid = document.getElementById('vip-grid');
+    const tipsGrid = document.getElementById('tips-grid');
+    
+    // تفريغ المحتوى القديم قبل الإضافة
+    vipGrid.innerHTML = '';
+    tipsGrid.innerHTML = '';
+
+    data.forEach(match => {
+        const card = document.createElement('div');
+        card.className = match.isVip ? 'card vip-card' : 'card';
+        const timerId = `timer-${match.id}`;
+        
+        card.innerHTML = `
+            ${match.isVip ? '<div class="vip-badge">Premium VIP</div>' : ''}
+            <div id="${timerId}" style="text-align:center; font-size:0.8rem; color:var(--accent); margin-bottom:10px; font-family:monospace; font-weight:bold;">00:00:00</div>
+            <div class="teams">${match.teams}</div>
+            <div id="${match.id}" class="locked-content">${match.analysis}</div>
+            <div id="conf-${match.id}" class="confidence-container">
+                <span style="font-size: 0.75rem; color: var(--vip);">ثقة أوراكل: ${match.confidence}%</span>
+                <div class="confidence-bar"><div class="confidence-fill" style="width: ${match.confidence}%;"></div></div>
+            </div>
+            <button class="unlock-btn" onclick="unlock('${match.id}', 'conf-${match.id}', this, ${match.isVip})">
+                <span class="loader"></span> <span>${match.isVip ? 'فتح التحليل العميق 🔓' : 'رؤية التوقع 🚀'}</span>
+            </button>
+        `;
+        
+        if (match.isVip) { vipGrid.appendChild(card); } 
+        else { tipsGrid.appendChild(card); }
+
+        // تفعيل العداد الزمني لكل مباراة
+        startCountdown(timerId, match.startTime);
+    });
+}
+
+// 5. محرك العداد التنازلي (Countdown Engine)
+function startCountdown(elementId, startTime) {
+    const target = new Date(startTime).getTime();
+    const interval = setInterval(() => {
+        const now = new Date().getTime();
+        const distance = target - now;
+        const el = document.getElementById(elementId);
+        
+        if (!el) return clearInterval(interval);
+
+        if (distance < 0) {
+            el.innerHTML = "🔴 LIVE NOW";
+            el.style.color = "#ef4444";
+            clearInterval(interval);
+            return;
+        }
+        
+        const h = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const m = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+        const s = Math.floor((distance % (1000 * 60)) / 1000);
+        
+        el.innerHTML = `⏳ يبدأ خلال: ${(h<10?'0'+h:h)}:${(m<10?'0'+m:m)}:${(s<10?'0'+s:s)}`;
+    }, 1000);
+}
+
+// 6. دالة فتح التحليل (Unlock Logic)
+function unlock(_v, _c, _b, _isVip) {
+    // استثناء: السماح بفتح أول مباراة VIP كـ "عينة مجانية" لجذب المستخدمين
+    if (_isVip && _v !== 'vip1') {
+        if (confirm("🔓 هذا التحليل العميق مخصص للمشتركين فقط. هل تود مراسلة GenYons على إنستغرام لتفعيل حسابك؟")) {
+            window.open(_decode(_0x_data._u), "_blank"); 
+        }
+        return;
+    }
+    
+    const _l = _b.querySelector('.loader');
+    const _t = _b.querySelector('span:not(.loader)');
+    
+    _l.style.display = 'inline-block';
+    _t.innerText = 'جاري تحليل البيانات...';
+    
+    setTimeout(() => {
+        const _cont = document.getElementById(_v);
+        const _conf = document.getElementById(_c);
+        
+        _cont.style.filter = "none";
+        _cont.style.opacity = "1";
+        if (_conf) _conf.style.display = 'block';
+        
+        _l.style.display = 'none';
+        _t.innerText = '✅ تم التحليل بنجاح';
+        _b.style.background = "#22c55e";
+        _b.disabled = true;
+    }, 1500);
+}
+
+// تشغيل الوظائف عند التحميل
+window.onload = loadOracleData;
+function copyPromo() { navigator.clipboard.writeText(_decode(_0x_data._p)); alert("تم نسخ الكود بنجاح!"); }
+function googleTranslateElementInit() { new google.translate.TranslateElement({pageLanguage: 'ar'}, 'google_translate_element'); }
+</script>
+
+<script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+</body>
+</html>
