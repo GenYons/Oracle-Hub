@@ -3,108 +3,123 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Oracle Hub | GenYons Premium</title>
+    <title>Oracle Hub Pro | SaaS Terminal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        :root { --primary: #fbbf24; --bg: #020617; --card: #0f172a; --accent: #38bdf8; }
-        body { background: var(--bg); color: #f8fafc; font-family: sans-serif; margin: 0; padding: 0; }
-        header { text-align: center; padding: 30px; border-bottom: 2px solid var(--primary); background: #0f172a; }
-        .grid { display: grid; grid-template-columns: 1fr; gap: 20px; padding: 20px; }
-        .card { background: var(--card); border: 1px solid #1e293b; border-radius: 15px; padding: 20px; position: relative; }
-        .vip-badge { position: absolute; top: 10px; right: 10px; background: var(--primary); color: #000; padding: 4px 12px; border-radius: 20px; font-size: 0.7rem; font-weight: bold; }
-        .teams { font-size: 1.2rem; font-weight: bold; text-align: center; margin: 15px 0; }
-        .prediction-box { filter: blur(8px); background: #000; padding: 15px; border-radius: 10px; transition: 0.5s; }
-        .unlock-btn { background: var(--primary); color: #000; border: none; padding: 12px; width: 100%; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 10px; }
-        .status-tag { color: var(--accent); font-size: 0.8rem; text-align: center; display: block; }
+        :root { --gold: #d4af37; --bg: #05070a; --card: #0d1117; --text: #f0f6fc; --green: #238636; }
+        body { background: var(--bg); color: var(--text); font-family: 'Cairo', sans-serif; margin: 0; padding: 10px; overflow-x: hidden; }
+        
+        /* تصميم SaaS الاحترافي */
+        .saas-terminal { max-width: 800px; margin: 20px auto; border: 1px solid #30363d; border-radius: 12px; background: #010409; overflow: hidden; }
+        .terminal-header { background: #161b22; padding: 15px; border-bottom: 1px solid var(--gold); display: flex; justify-content: space-between; align-items: center; }
+        
+        /* بطاقة المباراة */
+        .match-vault { padding: 30px 20px; text-align: center; }
+        .team-row { display: flex; justify-content: center; align-items: center; gap: 20px; font-size: 1.2rem; font-weight: bold; }
+        .vs-circle { width: 40px; height: 40px; border: 1px solid var(--gold); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; color: var(--gold); }
+        
+        /* العداد التنازلي */
+        .timer-box { margin: 25px 0; padding: 15px; background: #0d1117; border-radius: 8px; border: 1px dashed #30363d; }
+        .timer-digits { font-size: 2.5rem; color: var(--gold); font-weight: 700; letter-spacing: 5px; }
+
+        /* الرادار التكتيكي (نهج يونس) */
+        .tactical-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 20px; }
+        .stat-card { background: #161b22; padding: 15px; border-radius: 8px; border-right: 3px solid var(--gold); text-align: right; }
+        .stat-label { font-size: 0.75rem; color: #8b949e; display: block; }
+        .stat-value { font-size: 1.1rem; font-weight: bold; color: var(--text); }
+
+        /* الأمان والاتصال */
+        .status-bar { padding: 10px; font-size: 0.7rem; color: #8b949e; border-top: 1px solid #30363d; display: flex; gap: 15px; }
+        .online-dot { width: 8px; height: 8px; background: var(--green); border-radius: 50%; display: inline-block; }
     </style>
 </head>
 <body>
 
-<header>
-    <div style="font-size: 1.8rem; font-weight: 900; color: white;">◈ ORACLE HUB ◈</div>
-    <div style="color: var(--accent); font-size: 0.8rem;">GenYons Intelligence Dashboard</div>
-</header>
-
-<div id="main-content" class="grid">
+<div class="saas-terminal">
+    <div class="terminal-header">
+        <div><strong>ORACLE HUB <span style="color:var(--gold)">PRO</span></strong></div>
+        <div style="font-size: 0.8rem; opacity: 0.7;">SaaS Lab v0.1</div>
     </div>
+
+    <div class="match-vault">
+        <div class="team-row">
+            <span>CZE</span>
+            <div class="vs-circle">VS</div>
+            <span>DEN</span>
+        </div>
+
+        <div class="timer-box">
+            <div id="countdown" class="timer-digits">00 : 00 : 00</div>
+            <small style="color: #8b949e;">الوقت المتبقي لضربة البداية</small>
+        </div>
+
+        <div class="tactical-grid">
+            <div class="stat-card">
+                <span class="stat-label">الاستحواذ السلبي/الفعال</span>
+                <span class="stat-value" id="possession">-- %</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-label">المرتدات (التحول السريع)</span>
+                <span class="stat-value" id="counters">--</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-label">قوة الأجنحة (ركنيات)</span>
+                <span class="stat-value" id="corners">--</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-label">صلابة الحارس (Saves)</span>
+                <span class="stat-value" id="saves">--</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="status-bar">
+        <span><span class="online-dot"></span> المحرك: متصل</span>
+        <span>🔐 
+        </span>
+        <span id="api-status">📡 مزامنة API...</span>
+    </div>
+</div>
 
 <script>
     
-    const _0x5a21 = ["MGJiNmNkOTFlZTQxNDAxYmFmNmMwZWJiMTQ5NTA..." , 
-    "YTM0YjhkZg=="];
-    const _0x_v1 = "MGJiNmNkOTFlZTQxNDAxYmFmNmMwZWJiMTQxYzkyODM="; 
+    const _V1 = "30b6"; 
+    const _V2 = "cd91ee41"; 
+    const _V3 = "401baf6c"; 
+    const _V4 = "0ebb141c"; 
+    const _V5 = "9283";
+
+    function _engine() { return _V1 + _V2 + _V3 + _V4 + _V5; }
+
+    // --- [ المرحلة 1: العداد التنازلي للمباراة ] ---
+    const kickOff = new Date("2026-03-31T19:45:00Z").getTime();
+
+    const timer = setInterval(() => {
+        const now = new Date().getTime();
+        const diff = kickOff - now;
+
+        if (diff < 0) {
+            document.getElementById("countdown").innerHTML = "LIVE";
+            document.getElementById("api-status").innerText = "🔴 المباراة بدأت - جلب المعطيات التكتيكية...";
+            clearInterval(timer);
+            return;
+        }
+
+        const h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)).toString().padStart(2, '0');
+        const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)).toString().padStart(2, '0');
+        const s = Math.floor((diff % (1000 * 60)) / 1000).toString().padStart(2, '0');
+
+        document.getElementById("countdown").innerHTML = `${h} : ${m} : ${s}`;
+    }, 1000);
+
+    // --- [ المرحلة 2: محرك جلب البيانات (SaaS Logic) ] ---
+    // ملاحظة: سيتم تفعيل الجلب الحقيقي عند بداية المباراة غداً
+    async function fetchTacticalData() {
+        // سيتم ربط الـ API ID الخاص بمباراة التشيك والدنمارك هنا
+        console.log("الخزنة جاهزة بمفتاح: " + _engine().substring(0,5) + "...");
+    }
     
-    function _get_secure_key() {
-        
-        return atob("MGJiNmNkOTFlZTQxNDAxYmFmNmMwZWJiMTQ5NTA1ODIr").slice(0, -2);
-    }
-
-    
-    function _decrypt_logic(data) {
-        try {
-            return atob(data); 
-        } catch(e) { return data; }
-    }
-
-	async function loadOracleData() {
-    const vipGrid = document.getElementById('vip-grid');
-    const API_KEY = _get_k(); // استدعاء المفتاح المشفر الذي حقناه سابقاً
-
-    try {
-        // 1. جلب التوقعات المشفرة من ملفك المحلي
-        const localResponse = await fetch('matches.json');
-        const localData = await localResponse.json();
-
-        // 2. جلب النتائج الحية من السيرفر العالمي (Live Score)
-        // ملاحظة: استخدمنا id المسابقة المتاحة في خطتك المجانية
-        const liveResponse = await fetch('https://api.football-data.org/v4/matches?status=LIVE', {
-            headers: { 'X-Auth-Token': API_KEY }
-        });
-        const liveData = await liveResponse.json();
-
-        vipGrid.innerHTML = '';
-
-        localData.forEach(match => {
-            // البحث عن نتيجة المباراة الحية في السيرفر
-            const liveMatch = liveData.matches?.find(m => 
-                m.homeTeam.name.includes("Argentina") || m.awayTeam.name.includes("Mauritania")
-            );
-
-            const scoreText = liveMatch ? 
-                `<span style="color:#ef4444;">LIVE: ${liveMatch.score.fullTime.home} - ${liveMatch.score.fullTime.away}</span>` : 
-                `🕒 ${match.time}`;
-
-            const card = document.createElement('div');
-            card.className = 'card vip-card';
-            card.innerHTML = `
-                <div class="vip-badge">LIVE UPDATES</div>
-                <div class="status-tag">${scoreText}</div>
-                <div class="teams">${match.homeTeam} VS ${match.awayTeam}</div>
-                
-                <div id="${match.id}" class="locked-content" style="filter: blur(10px); opacity: 0.5;">
-                    <div class="prediction-text">
-                        <strong>توقع الأوراكل الحيي:</strong> ${_decrypt_content(match.encryptedPrediction)}
-                    </div>
-                </div>
-
-                <button class="unlock-btn" onclick="unlock('${match.id}', null, this, true)">
-                    إظهار التحليل المباشر 🔓
-                </button>
-            `;
-            vipGrid.appendChild(card);
-        });
-    } catch (error) {
-        console.error("Fetch Error:", error);
-        vipGrid.innerHTML = `<div class='error-msg'>⚠️ جاري تحديث البيانات الحية...</div>`;
-    }
-}
-
-    function reveal(id) {
-        const box = document.getElementById(`pred-${id}`);
-        box.style.filter = "none";
-        box.parentElement.querySelector('.unlock-btn').style.display = 'none';
-    }
-
-    window.onload = initOracle;
+    fetchTacticalData();
 </script>
 </body>
 </html>
