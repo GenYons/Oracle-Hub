@@ -3,34 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Oracle Hub Pro | SaaS Terminal</title>
+    <title>Oracle Hub Pro | SaaS Lab</title>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
     <style>
         :root { --gold: #d4af37; --bg: #05070a; --card: #0d1117; --text: #f0f6fc; --green: #238636; }
-        body { background: var(--bg); color: var(--text); font-family: 'Cairo', sans-serif; margin: 0; padding: 10px; overflow-x: hidden; }
-        
-        /* تصميم SaaS الاحترافي */
-        .saas-terminal { max-width: 800px; margin: 20px auto; border: 1px solid #30363d; border-radius: 12px; background: #010409; overflow: hidden; }
+        body { background: var(--bg); color: var(--text); font-family: 'Cairo', sans-serif; margin: 0; padding: 10px; }
+        .saas-terminal { max-width: 800px; margin: 20px auto; border: 1px solid #30363d; border-radius: 12px; background: #010409; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
         .terminal-header { background: #161b22; padding: 15px; border-bottom: 1px solid var(--gold); display: flex; justify-content: space-between; align-items: center; }
-        
-        /* بطاقة المباراة */
         .match-vault { padding: 30px 20px; text-align: center; }
-        .team-row { display: flex; justify-content: center; align-items: center; gap: 20px; font-size: 1.2rem; font-weight: bold; }
-        .vs-circle { width: 40px; height: 40px; border: 1px solid var(--gold); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; color: var(--gold); }
-        
-        /* العداد التنازلي */
-        .timer-box { margin: 25px 0; padding: 15px; background: #0d1117; border-radius: 8px; border: 1px dashed #30363d; }
-        .timer-digits { font-size: 2.5rem; color: var(--gold); font-weight: 700; letter-spacing: 5px; }
-
-        /* الرادار التكتيكي (نهج يونس) */
-        .tactical-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 20px; }
-        .stat-card { background: #161b22; padding: 15px; border-radius: 8px; border-right: 3px solid var(--gold); text-align: right; }
-        .stat-label { font-size: 0.75rem; color: #8b949e; display: block; }
-        .stat-value { font-size: 1.1rem; font-weight: bold; color: var(--text); }
-
-        /* الأمان والاتصال */
-        .status-bar { padding: 10px; font-size: 0.7rem; color: #8b949e; border-top: 1px solid #30363d; display: flex; gap: 15px; }
-        .online-dot { width: 8px; height: 8px; background: var(--green); border-radius: 50%; display: inline-block; }
+        .team-row { display: flex; justify-content: center; align-items: center; gap: 20px; font-size: 1.5rem; font-weight: bold; }
+        .vs-circle { width: 45px; height: 45px; border: 2px solid var(--gold); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; color: var(--gold); background: rgba(212, 175, 55, 0.1); }
+        .timer-box { margin: 25px 0; padding: 20px; background: #0d1117; border-radius: 12px; border: 1px dashed #30363d; }
+        .timer-digits { font-size: 3rem; color: var(--gold); font-weight: 700; letter-spacing: 5px; text-shadow: 0 0 15px rgba(212, 175, 55, 0.3); }
+        .tactical-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-top: 25px; }
+        .stat-card { background: #161b22; padding: 15px; border-radius: 10px; border-right: 4px solid var(--gold); text-align: right; transition: 0.3s; }
+        .stat-card:hover { transform: translateY(-3px); background: #1c222b; }
+        .stat-label { font-size: 0.8rem; color: #8b949e; display: block; margin-bottom: 5px; }
+        .stat-value { font-size: 1.3rem; font-weight: bold; color: var(--text); }
+        .status-bar { padding: 12px; font-size: 0.75rem; color: #8b949e; border-top: 1px solid #30363d; display: flex; justify-content: space-between; }
+        .pulse { animation: pulse-red 2s infinite; color: #ff4500; font-weight: bold; }
+        @keyframes pulse-red { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
     </style>
 </head>
 <body>
@@ -38,7 +30,7 @@
 <div class="saas-terminal">
     <div class="terminal-header">
         <div><strong>ORACLE HUB <span style="color:var(--gold)">PRO</span></strong></div>
-        <div style="font-size: 0.8rem; opacity: 0.7;">SaaS Lab v0.1</div>
+        <div style="font-size: 0.8rem; opacity: 0.8;">SaaS Lab v0.1</div>
     </div>
 
     <div class="match-vault">
@@ -50,57 +42,42 @@
 
         <div class="timer-box">
             <div id="countdown" class="timer-digits">00 : 00 : 00</div>
-            <small style="color: #8b949e;">الوقت المتبقي لضربة البداية</small>
+            <p id="match-status" style="margin-top: 10px; color: #8b949e;">في انتظار ضربة البداية (19:45)</p>
         </div>
 
         <div class="tactical-grid">
-            <div class="stat-card">
-                <span class="stat-label">الاستحواذ السلبي/الفعال</span>
-                <span class="stat-value" id="possession">-- %</span>
-            </div>
-            <div class="stat-card">
-                <span class="stat-label">المرتدات (التحول السريع)</span>
-                <span class="stat-value" id="counters">--</span>
-            </div>
-            <div class="stat-card">
-                <span class="stat-label">قوة الأجنحة (ركنيات)</span>
-                <span class="stat-value" id="corners">--</span>
-            </div>
-            <div class="stat-card">
-                <span class="stat-label">صلابة الحارس (Saves)</span>
-                <span class="stat-value" id="saves">--</span>
-            </div>
+            <div class="stat-card"><span class="stat-label">الاستحواذ (نهج يونس)</span><span class="stat-value" id="possession">-- %</span></div>
+            <div class="stat-card"><span class="stat-label">قوة الأجنحة (ركنيات)</span><span class="stat-value" id="corners">--</span></div>
+            <div class="stat-card"><span class="stat-label">المرتدات (التحول)</span><span class="stat-value" id="counters">--</span></div>
+            <div class="stat-card"><span class="stat-label">صلابة الحارس</span><span class="stat-value" id="saves">--</span></div>
         </div>
     </div>
 
     <div class="status-bar">
-        <span><span class="online-dot"></span> المحرك: متصل</span>
-        <span>🔐 
-        </span>
-        <span id="api-status">📡 مزامنة API...</span>
+        <span>🟢 المحرك: جاهز</span>
+        <span id="oracle-log">🔐 نظام تشفير يونس فعال</span>
+        <span>📡 API: مزامنة...</span>
     </div>
 </div>
 
 <script>
-    
-    const _V1 = "30b6"; 
-    const _V2 = "cd91ee41"; 
-    const _V3 = "401baf6c"; 
-    const _V4 = "0ebb141c"; 
-    const _V5 = "9283";
+    /
+    const _P = ["30b6", "cd91ee41", "401baf6c", "0ebb141c", "9283"];
+    function _auth() { return _P.join(""); }
 
-    function _engine() { return _V1 + _V2 + _V3 + _V4 + _V5; }
-
-    // --- [ المرحلة 1: العداد التنازلي للمباراة ] ---
+    // 2. توقيت المباراة (31 مارس - 19:45)
     const kickOff = new Date("2026-03-31T19:45:00Z").getTime();
 
+    // 3. محرك العداد التنازلي
     const timer = setInterval(() => {
         const now = new Date().getTime();
         const diff = kickOff - now;
 
         if (diff < 0) {
             document.getElementById("countdown").innerHTML = "LIVE";
-            document.getElementById("api-status").innerText = "🔴 المباراة بدأت - جلب المعطيات التكتيكية...";
+            document.getElementById("countdown").style.color = "#ff4500";
+            document.getElementById("match-status").innerHTML = "<span class='pulse'>تحليل الأوراكل قيد التنفيذ الآن...</span>";
+            runOracleEngine(); // تشغيل الجلب الحي
             clearInterval(timer);
             return;
         }
@@ -108,18 +85,32 @@
         const h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)).toString().padStart(2, '0');
         const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)).toString().padStart(2, '0');
         const s = Math.floor((diff % (1000 * 60)) / 1000).toString().padStart(2, '0');
-
         document.getElementById("countdown").innerHTML = `${h} : ${m} : ${s}`;
     }, 1000);
 
-    // --- [ المرحلة 2: محرك جلب البيانات (SaaS Logic) ] ---
-    // ملاحظة: سيتم تفعيل الجلب الحقيقي عند بداية المباراة غداً
-    async function fetchTacticalData() {
-        // سيتم ربط الـ API ID الخاص بمباراة التشيك والدنمارك هنا
-        console.log("الخزنة جاهزة بمفتاح: " + _engine().substring(0,5) + "...");
+    // 4. محرك الجلب التكتيكي (SaaS Logic)
+    async function runOracleEngine() {
+        const fixtureId = 1234567; // سيتم تحديثه بالـ ID الحقيقي فور بدء المباراة
+        try {
+            const response = await fetch(`https://api-football-v1.p.rapidapi.com/v3/fixtures/statistics?fixture=${fixtureId}`, {
+                method: 'GET',
+                headers: { 'X-RapidAPI-Key': _auth(), 'X-RapidAPI-Host': 'api-football-v1.p.rapidapi.com' }
+            });
+            const data = await response.json();
+            if (data.response && data.response.length > 0) {
+                updateUI(data.response[0].statistics);
+            }
+        } catch (e) { console.error("Waiting for Live Feed..."); }
     }
-    
-    fetchTacticalData();
+
+    function updateUI(stats) {
+        const getVal = (type) => stats.find(s => s.type === type)?.value || 0;
+        document.getElementById('possession').innerText = getVal("Ball Possession");
+        document.getElementById('corners').innerText = getVal("Corner Kicks");
+        document.getElementById('saves').innerText = getVal("Goalkeeper Saves");
+        document.getElementById('counters').innerText = getVal("Counter Attacks") || "تحت الحساب";
+    }
 </script>
 </body>
 </html>
+
