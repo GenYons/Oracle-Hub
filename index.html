@@ -17,7 +17,6 @@
         .timer-digits { font-size: 3rem; color: var(--gold); font-weight: 700; letter-spacing: 5px; text-shadow: 0 0 15px rgba(212, 175, 55, 0.3); }
         .tactical-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-top: 25px; }
         .stat-card { background: #161b22; padding: 15px; border-radius: 10px; border-right: 4px solid var(--gold); text-align: right; transition: 0.3s; }
-        .stat-card:hover { transform: translateY(-3px); background: #1c222b; }
         .stat-label { font-size: 0.8rem; color: #8b949e; display: block; margin-bottom: 5px; }
         .stat-value { font-size: 1.3rem; font-weight: bold; color: var(--text); }
         .status-bar { padding: 12px; font-size: 0.75rem; color: #8b949e; border-top: 1px solid #30363d; display: flex; justify-content: space-between; }
@@ -56,19 +55,19 @@
     <div class="status-bar">
         <span>🟢 المحرك: جاهز</span>
         <span id="oracle-log">🔐 نظام تشفير يونس فعال</span>
-        <span>📡 API: مزامنة...</span>
+        <span id="api-status">📡 API: مزامنة...</span>
     </div>
 </div>
 
 <script>
-    /
+    // 1. مفتاح الأمان الموزع
     const _P = ["30b6", "cd91ee41", "401baf6c", "0ebb141c", "9283"];
     function _auth() { return _P.join(""); }
 
-    // 2. توقيت المباراة (31 مارس - 19:45)
     const kickOff = new Date("2026-03-31T19:45:00Z").getTime();
+    let fixtureId = null;
 
-    // 3. محرك العداد التنازلي
+    // 2. محرك الوقت والتحويل للوضع الحي
     const timer = setInterval(() => {
         const now = new Date().getTime();
         const diff = kickOff - now;
@@ -77,7 +76,11 @@
             document.getElementById("countdown").innerHTML = "LIVE";
             document.getElementById("countdown").style.color = "#ff4500";
             document.getElementById("match-status").innerHTML = "<span class='pulse'>تحليل الأوراكل قيد التنفيذ الآن...</span>";
-            runOracleEngine(); // تشغيل الجلب الحي
+            
+            // استدعاء الدالة الصحيحة كل 60 ثانية
+            findAndRunLiveMatch(); 
+            setInterval(findAndRunLiveMatch, 60000); 
+            
             clearInterval(timer);
             return;
         }
@@ -87,37 +90,62 @@
         const s = Math.floor((diff % (1000 * 60)) / 1000).toString().padStart(2, '0');
         document.getElementById("countdown").innerHTML = `${h} : ${m} : ${s}`;
     }, 1000);
-// الجزء الاحترافي البديل (تأكد من وجوده في ملفك)
-async function findAndRunLiveMatch() {
-    try {
-        // 1. طلب قائمة المباريات المباشرة
-        const resp = await fetch('https://api-football-v1.p.rapidapi.com/v3/fixtures?live=all', {
-            method: 'GET',
-            headers: { 'X-RapidAPI-Key': _auth(), 'X-RapidAPI-Host': 'api-football-v1.p.rapidapi.com' }
-        });
-        const data = await resp.json();
-        
-        // 2. اصطياد المباراة المطلوبة آلياً
-        const match = data.response.find(m => 
-            m.teams.home.name.includes("Czech") || m.teams.away.name.includes("Denmark")
-        );
 
-        if (match) {
-            fixtureId = match.fixture.id; // هنا يتم استبدال الـ ID الافتراضي بالحقيقي
-            updateLiveStats(); // بدء تحديث الرادار
+    // 3. دالة البحث والجلب التلقائي
+    async function findAndRunLiveMatch() {
+        try {
+            document.getElementById("api-status").innerText = "📡 جاري البحث عن المباراة...";
+            
+            // جلب المباريات المباشرة
+            const resp = await fetch('https://api-football-v1.p.rapidapi.com/v3/fixtures?live=all', {
+                method: 'GET',
+                headers: { 'X-RapidAPI-Key': _auth(), 'X-RapidAPI-Host': 'api-football-v1.p.rapidapi.com' }
+            });
+            const data = await resp.json();
+
+            // البحث بمرونة أكبر (Case-insensitive)
+            const match = data.response.find(m => 
+                m.teams.home.name.toLowerCase().includes("cz") || 
+                m.teams.away.name.toLowerCase().includes("den")
+            );
+
+            if (match) {
+                fixtureId = match.fixture.id;
+                fetchStats(fixtureId);
+                document.getElementById("api-status").innerText = "📡 متصل بالمباراة حياً";
+            } else {
+                document.getElementById("api-status").innerText = "⚠️ لم يتم العثور على المباراة في الـ API";
+            }
+        } catch (e) { 
+            console.log("Error in Search:", e);
+            document.getElementById("oracle-log").innerText = "❌ خطأ في الاتصال";
         }
-    } catch (e) { console.log("Searching for Live Match..."); }
-}
+    }
 
+    // 4. جلب الإحصائيات الفعلية
+    async function fetchStats(fId) {
+        try {
+            const resp = await fetch(`https://api-football-v1.p.rapidapi.com/v3/fixtures/statistics?fixture=${fId}`, {
+                method: 'GET',
+                headers: { 'X-RapidAPI-Key': _auth(), 'X-RapidAPI-Host': 'api-football-v1.p.rapidapi.com' }
+            });
+            const statsData = await resp.json();
+            
+            if (statsData.response.length > 0) {
+                updateUI(statsData.response[0].statistics);
+            }
+        } catch (e) { console.log("Stats error:", e); }
+    }
 
     function updateUI(stats) {
         const getVal = (type) => stats.find(s => s.type === type)?.value || 0;
-        document.getElementById('possession').innerText = getVal("Ball Possession");
-        document.getElementById('corners').innerText = getVal("Corner Kicks");
-        document.getElementById('saves').innerText = getVal("Goalkeeper Saves");
-        document.getElementById('counters').innerText = getVal("Counter Attacks") || "تحت الحساب";
+        document.getElementById('possession').innerText = getVal("Ball Possession") || "0%";
+        document.getElementById('corners').innerText = getVal("Corner Kicks") || "0";
+        document.getElementById('saves').innerText = getVal("Goalkeeper Saves") || "0";
+        document.getElementById('counters').innerText = "جاري التحليل..."; 
     }
 </script>
 </body>
 </html>
+
 
