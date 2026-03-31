@@ -1,12 +1,20 @@
 [
   {
-    "id": "match_arg_mau_live_now",
-    "isVip": true,
-    "homeTeam": "الأرجنتين",
-    "awayTeam": "موريتانيا",
-    "startTime": "2026-03-28T00:30:00Z",
-    "time": "مباشر الآن 🔴",
-    "confidence": 91,
-    "encryptedPrediction": "2KfZhNqqdm9j2KfbptmKINiqZtmC2KUg2KfZhNmB2YjYsiDYp9mE2LPZitiq2Yog2YjZhtmC2KfYtyDYp9mE2KfZidmG2KfbptmKINio2YbbZidio2KkgOTEw4oCL"
+    "id": "match_cze_den_3103",
+    "fixture_id": 1234567, 
+    "homeTeam": "République tchèque",
+    "awayTeam": "Danemark",
+    "date": "2026-03-31",
+    "time": "19:45",
+    "status": "scheduled",
+    "prediction_data": {
+      "strategy": "Tactical-Reverse-Engine",
+      "encrypted_advice": "==AWZsdm96IDR0YjI="
+    },
+    "tactical_thresholds": {
+      "min_possession": 55,
+      "min_corners": 4,
+      "counter_attack_weight": 0.5
+    }
   }
 ]
