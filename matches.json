@@ -1,20 +1,23 @@
-[
-  {
-    "id": "match_cze_den_3103",
-    "fixture_id": 1234567, 
-    "homeTeam": "République tchèque",
-    "awayTeam": "Danemark",
-    "date": "2026-03-31",
-    "time": "19:45",
-    "status": "scheduled",
-    "prediction_data": {
-      "strategy": "Tactical-Reverse-Engine",
-      "encrypted_advice": "==AWZsdm96IDR0YjI="
+{
+  "response": [
+    {
+      "team": { "name": "Czech Republic" },
+      "statistics": [
+        { "type": "Ball Possession", "value": "45%" },
+        { "type": "Corner Kicks", "value": 3 },
+        { "type": "Goalkeeper Saves", "value": 5 },
+        { "type": "Counter Attacks", "value": 2 }
+      ]
     },
-    "tactical_thresholds": {
-      "min_possession": 55,
-      "min_corners": 4,
-      "counter_attack_weight": 0.5
+    {
+      "team": { "name": "Denmark" },
+      "statistics": [
+        { "type": "Ball Possession", "value": "55%" },
+        { "type": "Corner Kicks", "value": 8 },
+        { "type": "Goalkeeper Saves", "value": 2 },
+        { "type": "Counter Attacks", "value": 6 }
+      ]
     }
-  }
-]
+  ]
+}
+
