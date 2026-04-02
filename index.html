@@ -1,10 +1,9 @@
-
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Oracle Hub Pro | SaaS Lab</title>
+    <title>Oracle Hub Pro | Live Engine</title>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
     <style>
         :root { --gold: #d4af37; --bg: #05070a; --card: #0d1117; --text: #f0f6fc; }
@@ -28,93 +27,102 @@
 <div class="saas-terminal">
     <div class="terminal-header">
         <div><strong>ORACLE HUB <span style="color:var(--gold)">PRO</span></strong></div>
-        <div id="api-status" style="font-size: 0.8rem; color: var(--gold);">📡 نظام الـ ID نشط</div>
+        <div id="api-status" style="font-size: 0.8rem; color: var(--gold);">📡 نظام البحث الذكي نشط</div>
     </div>
 
     <div class="match-vault">
-        <div style="display: flex; justify-content: center; gap: 20px; font-size: 1.5rem; font-weight: bold;">
-            <span>CZE</span> <div style="color:var(--gold)">VS</div> <span>DEN</span>
+        <div id="teams-display" style="display: flex; justify-content: center; gap: 20px; font-size: 1.5rem; font-weight: bold;">
+            <span id="home-team">TEAM A</span> <div style="color:var(--gold)">VS</div> <span id="away-team">TEAM B</span>
         </div>
 
         <div class="timer-box">
-            <div id="countdown" class="timer-digits">00 : 00 : 00</div>
-            <p id="match-status" style="margin-top: 10px; color: #8b949e;">جاري مزامنة بيانات المباراة...</p>
+            <div id="countdown" class="timer-digits">-- : -- : --</div>
+            <p id="match-status" style="margin-top: 10px; color: #8b949e;">جاري البحث عن أقرب مباراة مباشرة...</p>
         </div>
 
         <div class="tactical-grid">
-            <div class="stat-card"><span class="stat-label">الاستحواذ (نهج يونس)</span><span class="stat-value" id="possession">-- %</span></div>
-            <div class="stat-card"><span class="stat-label">قوة الأجنحة (ركنيات)</span><span class="stat-value" id="corners">--</span></div>
-            <div class="stat-card"><span class="stat-label">المرتدات (التحول)</span><span class="stat-value" id="counters">--</span></div>
-            <div class="stat-card"><span class="stat-label">صلابة الحارس</span><span class="stat-value" id="saves">--</span></div>
+            <div class="stat-card"><span class="stat-label">الاستحواذ</span><span class="stat-value" id="possession">-- %</span></div>
+            <div class="stat-card"><span class="stat-label">الركنـيات</span><span class="stat-value" id="corners">--</span></div>
+            <div class="stat-card"><span class="stat-label">المرتـدات</span><span class="stat-value" id="counters">--</span></div>
+            <div class="stat-card"><span class="stat-label">تصديات الحارس</span><span class="stat-value" id="saves">--</span></div>
         </div>
     </div>
 
     <div class="status-bar">
-        <span>🟢 المحرك: يعمل بنظام الـ ID</span>
-        <span id="oracle-log">🔐 تشفير يونس: 1146313</span>
+        <span id="engine-mode">🟢 محرك البحث الذكي: جاري الفحص</span>
+        <span id="oracle-log">🔐 بانتظار التشفير...</span>
     </div>
 </div>
 
 <script>
-    // 1. نظام التوثيق والتشفير
-    const _P = ["30b6", "cd91ee41", "401baf6c", "0ebb141c", "9283"];
-    function _auth() { return _P.join(""); }
+    // 1. التوثيق والإعدادات
+    const CONFIG = {
+        keyParts: ["30b6", "cd91ee41", "401baf6c", "0ebb141c", "9283"],
+        apiHost: 'api-football-v1.p.rapidapi.com'
+    };
 
-    // 2. الـ ID المحدد لمباراة التشيك والدنمارك
-    const targetFixtureId = 1146313; 
-    const kickOff = new Date("2026-03-31T19:45:00Z").getTime();
+    const _auth = () => CONFIG.keyParts.join("");
 
-    // 3. المحرك الزمني والجلب المباشر
-    const mainTimer = setInterval(() => {
-        const now = new Date().getTime();
-        const diff = kickOff - now;
-
-        if (diff < 0) {
-            document.getElementById("countdown").innerHTML = "LIVE";
-            document.getElementById("countdown").style.color = "#ff4500";
-            document.getElementById("match-status").innerHTML = "<span class='pulse'>تحليل الأوراكل قيد التنفيذ (ID: 1146313)</span>";
-            
-            // بدء الجلب الفوري وتكراره كل 60 ثانية
-            fetchLiveStats(targetFixtureId);
-            setInterval(() => fetchLiveStats(targetFixtureId), 60000);
-            
-            clearInterval(mainTimer);
-            return;
-        }
-
-        const h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)).toString().padStart(2, '0');
-        const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)).toString().padStart(2, '0');
-        const s = Math.floor((diff % (1000 * 60)) / 1000).toString().padStart(2, '0');
-        document.getElementById("countdown").innerHTML = `${h} : ${m} : ${s}`;
-    }, 1000);
-
-    // 4. دالة الجلب الصارمة عبر الـ ID
-    async function fetchLiveStats(fId) {
+    // 2. المحرك الرئيسي: البحث عن مباراة مباشرة تلقائياً
+    async function initEngine() {
+        document.getElementById("oracle-log").innerText = "🔍 جاري جلب المباريات المباشرة...";
+        
         try {
-            const response = await fetch(`https://api-football-v1.p.rapidapi.com/v3/fixtures/statistics?fixture=${fId}`, {
+            const response = await fetch(`https://${CONFIG.apiHost}/v3/fixtures?live=all`, {
                 method: 'GET',
-                headers: { 
-                    'X-RapidAPI-Key': _auth(), 
-                    'X-RapidAPI-Host': 'api-football-v1.p.rapidapi.com' 
-                }
+                headers: { 'X-RapidAPI-Key': _auth(), 'X-RapidAPI-Host': CONFIG.apiHost }
             });
             const data = await response.json();
 
             if (data.response && data.response.length > 0) {
-                // نأخذ إحصائيات الفريقين (index 0 و 1) ونعرض متوسط الاستحواذ كمثال أو إحصائيات الضيف
-                const stats = data.response[1].statistics; // إحصائيات الدنمارك
-                updateUI(stats);
-                document.getElementById("oracle-log").innerText = "✅ تحديث البيانات ناجح";
+                // نأخذ أول مباراة مباشرة متوفرة
+                const liveMatch = data.response[0];
+                setupMatch(liveMatch);
             } else {
-                document.getElementById("oracle-log").innerText = "⚠️ المباراة لم تبدأ بياناتها بعد";
+                document.getElementById("match-status").innerText = "⚠️ لا توجد مباريات مباشرة حالياً.";
+                document.getElementById("oracle-log").innerText = "📴 وضع الانتظار";
             }
         } catch (error) {
-            console.error("API Error:", error);
-            document.getElementById("oracle-log").innerText = "❌ فشل في جلب البيانات";
+            document.getElementById("oracle-log").innerText = "❌ خطأ في الاتصال بالـ API";
         }
     }
 
-    // 5. تحديث الواجهة الرسومية
+    // 3. إعداد بيانات المباراة المكتشفة
+    function setupMatch(match) {
+        const fId = match.fixture.id;
+        document.getElementById("home-team").innerText = match.teams.home.name;
+        document.getElementById("away-team").innerText = match.teams.away.name;
+        document.getElementById("countdown").innerText = "LIVE";
+        document.getElementById("countdown").style.color = "#ff4500";
+        document.getElementById("match-status").innerHTML = `<span class="pulse">تحليل مباشر قيد التنفيذ (ID: ${fId})</span>`;
+        document.getElementById("engine-mode").innerText = `🟢 متصل بالمباراة: ${fId}`;
+
+        // بدء جلب الإحصائيات فوراً وكل دقيقة
+        fetchStats(fId);
+        setInterval(() => fetchStats(fId), 60000);
+    }
+
+    // 4. جلب الإحصائيات الحية
+    async function fetchStats(fId) {
+        try {
+            const response = await fetch(`https://${CONFIG.apiHost}/v3/fixtures/statistics?fixture=${fId}`, {
+                method: 'GET',
+                headers: { 'X-RapidAPI-Key': _auth(), 'X-RapidAPI-Host': CONFIG.apiHost }
+            });
+            const data = await response.json();
+
+            if (data.response && data.response.length > 0) {
+                // نأخذ إحصائيات الفريق الضيف (index 1) أو الأرضي (index 0)
+                const stats = data.response[1]?.statistics || data.response[0]?.statistics;
+                updateUI(stats);
+                document.getElementById("oracle-log").innerText = `✅ تحديث: ${new Date().toLocaleTimeString('ar-EG')}`;
+            }
+        } catch (e) {
+            document.getElementById("oracle-log").innerText = "⚠️ فشل تحديث الإحصائيات";
+        }
+    }
+
+    // 5. تحديث الأرقام في الواجهة
     function updateUI(stats) {
         const getVal = (type) => stats.find(s => s.type === type)?.value || 0;
         
@@ -123,8 +131,12 @@
         document.getElementById('saves').innerText = getVal("Goalkeeper Saves") || "0";
         document.getElementById('counters').innerText = getVal("Counter Attacks") || "0";
     }
+
+    // تشغيل المحرك عند فتح الصفحة
+    initEngine();
 </script>
 </body>
 </html>
+
 
 
