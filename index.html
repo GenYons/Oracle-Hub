@@ -55,86 +55,60 @@
 </div>
 
 <script>
-    // 1. التوثيق والإعدادات
+    // الإعدادات - لاحظ أننا لم نعد بحاجة لمفاتيح API إذا كنا نقرأ من ملف محلي
     const CONFIG = {
-        keyParts: ["30b6", "cd91ee41", "401baf6c", "0ebb141c", "9283"],
-        apiHost: 'api-football-v1.p.rapidapi.com'
+        jsonFile: "match.json", 
+        refreshInterval: 30000 // تحديث كل 30 ثانية
     };
 
-    const _auth = () => CONFIG.keyParts.join("");
-
-    // 2. المحرك الرئيسي: البحث عن مباراة مباشرة تلقائياً
-    async function initEngine() {
-        document.getElementById("oracle-log").innerText = "🔍 جاري جلب المباريات المباشرة...";
+    // 1. المحرك الرئيسي للجلب من ملف محلي
+    async function fetchLocalStats() {
+        const logEl = document.getElementById("oracle-log");
         
         try {
-            const response = await fetch(`https://${CONFIG.apiHost}/v3/fixtures?live=all`, {
-                method: 'GET',
-                headers: { 'X-RapidAPI-Key': _auth(), 'X-RapidAPI-Host': CONFIG.apiHost }
-            });
+            // جلب البيانات من الملف المحلي
+            const response = await fetch(CONFIG.jsonFile);
+            
+            if (!response.ok) throw new Error("File not found");
+            
             const data = await response.json();
 
             if (data.response && data.response.length > 0) {
-                // نأخذ أول مباراة مباشرة متوفرة
-                const liveMatch = data.response[0];
-                setupMatch(liveMatch);
-            } else {
-                document.getElementById("match-status").innerText = "⚠️ لا توجد مباريات مباشرة حالياً.";
-                document.getElementById("oracle-log").innerText = "📴 وضع الانتظار";
+                // نختار إحصائيات الفريق الثاني (الدنمارك) كما في كودك الأصلي
+                const stats = data.response[1].statistics;
+                
+                updateUI(stats);
+                logEl.innerText = `✅ مزامنة محليّة: ${new Date().toLocaleTimeString('ar-EG')}`;
+                
+                // تحديث الأسماء إذا كانت موجودة في الملف
+                document.getElementById("home-team").innerText = data.response[0].team.name;
+                document.getElementById("away-team").innerText = data.response[1].team.name;
             }
         } catch (error) {
-            document.getElementById("oracle-log").innerText = "❌ خطأ في الاتصال بالـ API";
+            console.error("Error loading JSON:", error);
+            logEl.innerText = "❌ خطأ: تأكد من وجود ملف match.json في نفس المجلد";
         }
     }
 
-    // 3. إعداد بيانات المباراة المكتشفة
-    function setupMatch(match) {
-        const fId = match.fixture.id;
-        document.getElementById("home-team").innerText = match.teams.home.name;
-        document.getElementById("away-team").innerText = match.teams.away.name;
-        document.getElementById("countdown").innerText = "LIVE";
-        document.getElementById("countdown").style.color = "#ff4500";
-        document.getElementById("match-status").innerHTML = `<span class="pulse">تحليل مباشر قيد التنفيذ (ID: ${fId})</span>`;
-        document.getElementById("engine-mode").innerText = `🟢 متصل بالمباراة: ${fId}`;
-
-        // بدء جلب الإحصائيات فوراً وكل دقيقة
-        fetchStats(fId);
-        setInterval(() => fetchStats(fId), 60000);
-    }
-
-    // 4. جلب الإحصائيات الحية
-    async function fetchStats(fId) {
-        try {
-            const response = await fetch(`https://${CONFIG.apiHost}/v3/fixtures/statistics?fixture=${fId}`, {
-                method: 'GET',
-                headers: { 'X-RapidAPI-Key': _auth(), 'X-RapidAPI-Host': CONFIG.apiHost }
-            });
-            const data = await response.json();
-
-            if (data.response && data.response.length > 0) {
-                // نأخذ إحصائيات الفريق الضيف (index 1) أو الأرضي (index 0)
-                const stats = data.response[1]?.statistics || data.response[0]?.statistics;
-                updateUI(stats);
-                document.getElementById("oracle-log").innerText = `✅ تحديث: ${new Date().toLocaleTimeString('ar-EG')}`;
-            }
-        } catch (e) {
-            document.getElementById("oracle-log").innerText = "⚠️ فشل تحديث الإحصائيات";
-        }
-    }
-
-    // 5. تحديث الأرقام في الواجهة
+    // 2. تحديث الواجهة (نفس المنطق القوي الخاص بك)
     function updateUI(stats) {
         const getVal = (type) => stats.find(s => s.type === type)?.value || 0;
         
-        document.getElementById('possession').innerText = getVal("Ball Possession") || "0%";
-        document.getElementById('corners').innerText = getVal("Corner Kicks") || "0";
-        document.getElementById('saves').innerText = getVal("Goalkeeper Saves") || "0";
-        document.getElementById('counters').innerText = getVal("Counter Attacks") || "0";
+        document.getElementById('possession').innerText = getVal("Ball Possession");
+        document.getElementById('corners').innerText = getVal("Corner Kicks");
+        document.getElementById('saves').innerText = getVal("Goalkeeper Saves");
+        document.getElementById('counters').innerText = getVal("Counter Attacks");
     }
 
-    // تشغيل المحرك عند فتح الصفحة
-    initEngine();
+    // 3. تشغيل النظام
+    // بما أنه ملف محلي، سنلغي العد التنازلي ونعرض البيانات فوراً
+    document.getElementById("countdown").innerText = "LOCAL";
+    document.getElementById("match-status").innerText = "نظام الأوراكل يعمل عبر قاعدة بيانات محلية";
+    
+    fetchLocalStats(); 
+    setInterval(fetchLocalStats, CONFIG.refreshInterval);
 </script>
+
 </body>
 </html>
 
