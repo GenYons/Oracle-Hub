@@ -55,58 +55,100 @@
 </div>
 
 <script>
-    // الإعدادات - لاحظ أننا لم نعد بحاجة لمفاتيح API إذا كنا نقرأ من ملف محلي
     const CONFIG = {
-        jsonFile: "match.json", 
-        refreshInterval: 30000 // تحديث كل 30 ثانية
+        apiKey: "0bb6cd91ee41401baf6c0ebb141c9283"
+
+        apiHost: "v3.football.api-sports.io",
+        refreshInterval: 20000 
     };
 
-    // 1. المحرك الرئيسي للجلب من ملف محلي
-    async function fetchLocalStats() {
+    let currentFixtureId = null;
+
+    // 1. وظيفة البحث عن مباراة مباشرة حالياً
+    async function findLiveMatch() {
         const logEl = document.getElementById("oracle-log");
-        
+        const statusEl = document.getElementById("match-status");
+
         try {
-            // جلب البيانات من الملف المحلي
-            const response = await fetch(CONFIG.jsonFile);
-            
-            if (!response.ok) throw new Error("File not found");
-            
+            const response = await fetch(`https://${CONFIG.apiHost}/fixtures?live=all`, {
+                method: 'GET',
+                headers: {
+                    'x-rapidapi-key': CONFIG.apiKey,
+                    'x-rapidapi-host': CONFIG.apiHost
+                }
+            });
+
             const data = await response.json();
 
             if (data.response && data.response.length > 0) {
-                // نختار إحصائيات الفريق الثاني (الدنمارك) كما في كودك الأصلي
-                const stats = data.response[1].statistics;
+                // اختيار أول مباراة مباشرة متاحة
+                const match = data.response[0];
+                currentFixtureId = match.fixture.id;
                 
-                updateUI(stats);
-                logEl.innerText = `✅ مزامنة محليّة: ${new Date().toLocaleTimeString('ar-EG')}`;
+                document.getElementById("home-team").innerText = match.teams.home.name;
+                document.getElementById("away-team").innerText = match.teams.away.name;
+                statusEl.innerText = `مباراة مباشرة: ${match.fixture.status.elapsed}' دقيقة`;
                 
-                // تحديث الأسماء إذا كانت موجودة في الملف
-                document.getElementById("home-team").innerText = data.response[0].team.name;
-                document.getElementById("away-team").innerText = data.response[1].team.name;
+                // البدء بجلب الإحصائيات لهذه المباراة
+                fetchLiveStats();
+            } else {
+                statusEl.innerText = "لا توجد مباريات مباشرة حالياً. النظام في وضع الاستعداد...";
+                logEl.innerText = "😴 Waiting for Live Matches...";
             }
         } catch (error) {
-            console.error("Error loading JSON:", error);
-            logEl.innerText = ;
+            logEl.innerText = "❌ خطأ في الاتصال بالخادم";
         }
     }
 
-    // 2. تحديث الواجهة (نفس المنطق القوي الخاص بك)
-    function updateUI(stats) {
-        const getVal = (type) => stats.find(s => s.type === type)?.value || 0;
-        
-        document.getElementById('possession').innerText = getVal("Ball Possession");
-        document.getElementById('corners').innerText = getVal("Corner Kicks");
-        document.getElementById('saves').innerText = getVal("Goalkeeper Saves");
-        document.getElementById('counters').innerText = getVal("Counter Attacks");
+    // 2. وظيفة جلب الإحصائيات التفصيلية
+    async function fetchLiveStats() {
+        if (!currentFixtureId) return;
+
+        const logEl = document.getElementById("oracle-log");
+
+        try {
+            const response = await fetch(`https://${CONFIG.apiHost}/fixtures/statistics?fixture=${currentFixtureId}`, {
+                method: 'GET',
+                headers: {
+                    'x-rapidapi-key': CONFIG.apiKey,
+                    'x-rapidapi-host': CONFIG.apiHost
+                }
+            });
+
+            const data = await response.json();
+
+            if (data.response && data.response.length >= 2) {
+                // نأخذ إحصائيات الفريقين (سنعرض هنا إحصائيات المباراة بشكل عام أو لفريق محدد)
+                // لنأخذ الفريق الثاني (Away) كمثال للتحديث
+                const stats = data.response[1].statistics;
+                updateUI(stats);
+                
+                logEl.innerText = `⚡ تحديث ذكي نشط: ${new Date().toLocaleTimeString('ar-EG')}`;
+                document.getElementById("countdown").innerText = "LIVE";
+            }
+        } catch (error) {
+            console.error("Stats Error:", error);
+        }
     }
 
-    // 3. تشغيل النظام
-    // بما أنه ملف محلي، سنلغي العد التنازلي ونعرض البيانات فوراً
-    document.getElementById("countdown").innerText = "LOCAL";
-    document.getElementById("match-status").innerText = "نظام الأوراكل يعمل عبر قاعدة بيانات محلية";
-    
-    fetchLocalStats(); 
-    setInterval(fetchLocalStats, CONFIG.refreshInterval);
+    // 3. تحديث واجهة المستخدم
+    function updateUI(stats) {
+        const getVal = (type) => {
+            const item = stats.find(s => s.type === type);
+            return item ? item.value : "0";
+        };
+
+        // تحديث الأرقام في المنصة
+        document.getElementById('possession').innerText = getVal("Ball Possession") || "0%";
+        document.getElementById('corners').innerText = getVal("Corner Kicks") || "0";
+        document.getElementById('saves').innerText = getVal("Goalkeeper Saves") || "0";
+        document.getElementById('counters').innerText = getVal("Counter Attacks") || "0";
+    }
+
+    // تشغيل النظام: ابحث عن مباراة كل دقيقة، وحدث الإحصائيات كل 20 ثانية
+    findLiveMatch(); 
+    setInterval(findLiveMatch, 60000); // البحث عن مباراة جديدة كل دقيقة
+    setInterval(fetchLiveStats, CONFIG.refreshInterval); // تحديث الأرقام كل 20 ثانية
 </script>
 
 </body>
