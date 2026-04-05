@@ -1,23 +1,40 @@
 {
+  "get": "fixtures",
+  "parameters": { "live": "all" },
+  "results": 1,
   "response": [
     {
-      "team": { "name": "Czech Republic" },
+      "fixture": {
+        "id": 867946,
+        "status": {
+          "elapsed": 72,
+          "long": "First Half"
+        }
+      },
+      "teams": {
+        "home": { "name": "Real Madrid" },
+        "away": { "name": "Barcelona" }
+      },
       "statistics": [
-        { "type": "Ball Possession", "value": "45%" },
-        { "type": "Corner Kicks", "value": 3 },
-        { "type": "Goalkeeper Saves", "value": 5 },
-        { "type": "Counter Attacks", "value": 2 }
-      ]
-    },
-    {
-      "team": { "name": "Denmark" },
-      "statistics": [
-        { "type": "Ball Possession", "value": "55%" },
-        { "type": "Corner Kicks", "value": 8 },
-        { "type": "Goalkeeper Saves", "value": 2 },
-        { "type": "Counter Attacks", "value": 6 }
+        {
+          "team": { "name": "Real Madrid" },
+          "statistics": [
+            { "type": "Ball Possession", "value": "48%" },
+            { "type": "Corner Kicks", "value": 5 },
+            { "type": "Goalkeeper Saves", "value": 3 },
+            { "type": "Counter Attacks", "value": 4 }
+          ]
+        },
+        {
+          "team": { "name": "Barcelona" },
+          "statistics": [
+            { "type": "Ball Possession", "value": "52%" },
+            { "type": "Corner Kicks", "value": 7 },
+            { "type": "Goalkeeper Saves", "value": 2 },
+            { "type": "Counter Attacks", "value": 2 }
+          ]
+        }
       ]
     }
   ]
 }
-
