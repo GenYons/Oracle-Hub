@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Oracle Hub - البث المباشر</title>
+    <!-- حل مشكلة 404 للـ Favicon بأيقونة أوراكل سحرية مدمجة (بدون ملفات إضافية) -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔮</text></svg>">
+    <style>
+        :root { --accent: #fbbf24; --bg: #0f172a; --card-bg: #1e293b; --home-color: #ef4444; --away-color: #3b82f6; --oracle-glow: #8b5cf6; }
+        body { background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; padding: 15px; display: flex; flex-direction: column; align-items: center; overflow-x: hidden; }
+        
+        .match-card { width: 100%; max-width: 600px; background: var(--card-bg); border-radius: 20px; padding: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); text-align: center; position: relative; transition: all 0.3s ease; }
+        .timer-label { color: var(--accent); font-size: 0.85rem; font-weight: bold; margin-bottom: 5px; }
+        
+        /* ضغطنا مسافات الساعة لتبدو احترافية */
+        .main-clock { font-size: 2.8rem; font-weight: 900; margin-bottom: 25px; letter-spacing: 2px; color: white; }
+
+        .teams-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; gap: 10px; }
+        .team-box { flex: 2; display: flex; flex-direction: column; align-items: center; padding: 10px; border-radius: 15px; transition: all 0.3s ease; }
+        .team-logo { width: 65px; height: 65px; object-fit: contain; margin-bottom: 10px; border-radius: 8px; }
+        .team-name { font-size: 0.95rem; font-weight: bold; }
+
+        .live-score-container { flex: 3; display: flex; justify-content: center; align-items: center; gap: 15px; font-size: 3rem; font-weight: 900; color: var(--accent); display: none; }
+        .vs-label { font-weight: bold; color: #475569; font-size: 1.2rem; }
+
+        .stats-section { margin-top: 20px; padding: 15px; background: rgba(0,0,0,0.2); border-radius: 14px; display: none; text-align: right; }
+        .stat-row { margin-bottom: 15px; }
+        .stat-labels { display: flex; justify-content: space-between; font-size: 0.85rem; color: #94a3b8; font-weight: bold; margin-bottom: 6px; }
+        .stat-bar-container { 
+    height: 10px; /* زيادة الطول قليلاً لراحة العين */
+    background: #1e293b; 
+    border-radius: 20px; /* حواف دائرية انسيابية لعام 2026 */
+    display: flex; 
+    overflow: hidden; 
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.5);
+}
+         .stat-bar-home { height: 100%; background: var(--home-color); border-radius: 20px 0 0 20px; transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1); }
+         .stat-bar-away { height: 100%; background: var(--away-color); border-radius: 0 20px 20px 0; transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1); }
+
+        .events-container { display: flex; gap: 15px; margin-top: 25px; text-align: right; }
+        .team-events-column { flex: 1; background: rgba(0,0,0,0.2); padding: 15px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); min-height: 120px; }
+        .column-title { font-size: 0.85rem; color: #94a3b8; border-bottom: 2px solid rgba(255,255,255,0.1); padding-bottom: 6px; margin-bottom: 10px; font-weight: bold; text-align: center; }
+        .event-item { padding: 8px 4px; font-size: 0.85rem; border-bottom: 1px solid rgba(255,255,255,0.03); display: flex; align-items: center; gap: 6px; animation: fadeIn 0.4s ease-out; }
+        .event-item .event-text { flex-grow: 1; }
+        .event-min { color: var(--accent); font-weight: bold; width: 25px; }
+
+        /* ========================================= */
+        /* 🔮 تأثيرات أوراكل التنبؤية (The Surprise) */
+        /* ========================================= */
+        .pulse { animation: pulse-gold 0.8s ease-out; }
+        
+        /* 1. وميض النيون للفريق الذي سيهاجم */
+       .neon-glow-home { 
+    border: 2px solid rgba(239, 68, 68, 0.8) !important;
+    box-shadow: 0 0 30px 5px rgba(239, 68, 68, 0.5), inset 0 0 15px rgba(239, 68, 68, 0.3); 
+    animation: neon-pulse-h 1.2s infinite alternate cubic-bezier(0.4, 0, 0.2, 1); 
+    background: rgba(239, 68, 68, 0.15) !important; 
+}
+       .neon-glow-away { 
+    border: 2px solid rgba(59, 130, 246, 0.8) !important;
+    box-shadow: 0 0 30px 5px rgba(59, 130, 246, 0.5), inset 0 0 15px rgba(59, 130, 246, 0.3); 
+    animation: neon-pulse-a 1.2s infinite alternate cubic-bezier(0.4, 0, 0.2, 1); 
+    background: rgba(59, 130, 246, 0.15) !important; 
+}
+        /* 2. اهتزاز بطاقة المباراة عند استشعار الخطر */
+        .shake { animation: card-shake 0.4s cubic-bezier(.36,.07,.19,.97) both; }
+        
+        /* 3. بطاقة التنبؤ العائمة الزجاجية */
+        .oracle-alert-card {
+    position: fixed;
+    bottom: -100px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(15, 23, 42, 0.85); /* خلفية داكنة غنية مدمجة بالزجاج */
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--oracle-glow);
+    padding: 12px 25px;
+    border-radius: 30px; /* حواف عصرية متناسقة */
+    color: #fff;
+    font-weight: 600;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    box-shadow: 0 10px 40px rgba(139, 92, 246, 0.4);
+    transition: bottom 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    z-index: 1000;
+}
+        .oracle-alert-card.show { bottom: 40px; } /* تظهر بطفو للأعلى */
+
+        @keyframes pulse-gold { 50% { transform: scale(1.15); text-shadow: 0 0 20px var(--accent); } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes neon-pulse-h { from { box-shadow: 0 0 10px rgba(239,68,68,0.4); } to { box-shadow: 0 0 35px rgba(239,68,68,0.8); } }
+        @keyframes neon-pulse-a { from { box-shadow: 0 0 10px rgba(59,130,246,0.4); } to { box-shadow: 0 0 35px rgba(59,130,246,0.8); } }
+        @keyframes card-shake { 10%, 90% { transform: translate3d(-2px, 0, 0); } 20%, 80% { transform: translate3d(3px, 0, 0); } 30%, 50%, 70% { transform: translate3d(-4px, 0, 0); } 40%, 60% { transform: translate3d(4px, 0, 0); } }
+    </style>
+</head>
+<body>
+
+    <div class="match-card" id="main-match-card">
+        <div id="timer-label" class="timer-label">جاري الاتصال بالبث الحي السحابي...</div>
+        <div id="main-clock" class="main-clock">--:--</div>
+
+        <div class="teams-header">
+            <div class="team-box" id="home-team-box">
+                <img id="h-logo" class="team-logo" src="" alt="">
+                <div id="h-name" class="team-name">--</div>
+            </div>
+
+            <div id="score-wrapper" class="live-score-container">
+                <div id="h-goals">0</div>
+                <div style="color: #475569; font-size: 1.8rem; margin: 0 10px;">-</div>
+                <div id="a-goals">0</div>
+            </div>
+            <div id="vs-wrapper" class="vs-label">VS</div>
+
+            <div class="team-box" id="away-team-box">
+                <img id="a-logo" class="team-logo" src="" alt="">
+                <div id="a-name" class="team-name">--</div>
+            </div>
+        </div>
+
+        <div id="stats-wrapper" class="stats-section">
+            <!-- أشرطة الإحصائيات -->
+            <div class="stat-row">
+                <div class="stat-labels">
+                    <span id="stat-h-pos">50%</span><span style="color: white;">الاستحواذ</span><span id="stat-a-pos">50%</span>
+                </div>
+                <div class="stat-bar-container">
+                    <div id="bar-h-pos" class="stat-bar-home" style="width: 50%;"></div>
+                    <div id="bar-a-pos" class="stat-bar-away" style="width: 50%;"></div>
+                </div>
+            </div>
+            <div class="stat-row">
+                <div class="stat-labels">
+                    <span id="stat-h-att">0</span><span style="color: white;">الهجمات</span><span id="stat-a-att">0</span>
+                </div>
+                <div class="stat-bar-container">
+                    <div id="bar-h-att" class="stat-bar-home" style="width: 50%;"></div>
+                    <div id="bar-a-att" class="stat-bar-away" style="width: 50%;"></div>
+                </div>
+            </div>
+            <div class="stat-row">
+                <div class="stat-labels">
+                    <span id="stat-h-danger">0</span><span style="color: white;">هجمات خطيرة</span><span id="stat-a-danger">0</span>
+                </div>
+                <div class="stat-bar-container">
+                    <div id="bar-h-danger" class="stat-bar-home" style="width: 50%;"></div>
+                    <div id="bar-a-danger" class="stat-bar-away" style="width: 50%;"></div>
+                </div>
+            </div>
+            <div class="stat-row">
+                <div class="stat-labels">
+                    <span id="stat-h-offsides">0</span><span style="color: white;">🏁 التسلل</span><span id="stat-a-offsides">0</span>
+                </div>
+                <div class="stat-bar-container">
+                    <div id="bar-h-offsides" class="stat-bar-home" style="width: 50%;"></div>
+                    <div id="bar-a-offsides" class="stat-bar-away" style="width: 50%;"></div>
+                </div>
+            </div>
+            <div class="stat-row">
+                <div class="stat-labels">
+                    <span id="stat-h-keypass">0</span><span style="color: white;">🔑 تمريرات مفتاحية</span><span id="stat-a-keypass">0</span>
+                </div>
+                <div class="stat-bar-container">
+                    <div id="bar-h-keypass" class="stat-bar-home" style="width: 50%;"></div>
+                    <div id="bar-a-keypass" class="stat-bar-away" style="width: 50%;"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="events-container">
+            <div class="team-events-column">
+                <div id="h-column-title" class="column-title">أحداث الأرض</div>
+                <div id="home-events-log"></div>
+            </div>
+            <div class="team-events-column">
+                <div id="a-column-title" class="column-title">أحداث الضيف</div>
+                <div id="away-events-log"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- بطاقة التنبؤ المخفية (تظهر فقط بأمر بايثون) -->
+    <!-- من السطر 114 إلى 117 -->
+     <div id="oracle-alert" class="oracle-alert-card">
+          <span style="font-size: 1.5rem;">🔮</span> 
+           <span id="oracle-msg">تحليل أوراكل: رصد ارتفاع حاد في مؤشر الكثافة الهجومية!</span>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js";
+    import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyC60jXVfotAhIWv58XWnun-Nr-8ZfM2Eiw",
+      authDomain: "oracle-hub-98076.firebaseapp.com",
+      databaseURL: "https://oracle-hub-98076-default-rtdb.firebaseio.com",
+      projectId: "oracle-hub-98076"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    const matchRef = ref(db, 'oracle_test_match');
+
+    // 🔮 محرك تتبع ذكي يمنع التكرار اللانهائي مع العداد، ويسمح بالانتقال الفوري بين الفرق
+    window.lastTriggeredTeam = null;
+
+    onValue(matchRef, (snapshot) => {
+        if(snapshot.exists()) {
+            const data = snapshot.val();
+            if (data && data.teams && data.liveState) {
+                renderLiveUpdate(data);
+                
+                const predictionData = data.prediction || {};
+                
+               if (predictionData.isImminent) {
+    if (window.lastTriggeredTeam !== predictionData.targetTeam) {
+        window.lastTriggeredTeam = predictionData.targetTeam;
+        // تعديل النص الممرر هنا للتوافق مع AdMob
+        triggerOracleSurprise(predictionData.targetTeam || 'home', "تحليل أوراكل: ضغط رقمي متصاعد وخطورة وشيكة للأهداف!");
+    }
+}
+                 else {
+                    // عند التصفير وإعادة الوضع الطبيعي
+                    if (window.lastTriggeredTeam !== null) {
+                        window.lastTriggeredTeam = null;
+                        clearOracleGlows(); // دالة لتنظيف النيون فوراً عند التصفير
+                    }
+                }
+
+            } else {
+                document.getElementById('timer-label').innerText = "⚠️ بنية البيانات السحابية غير متوافقة";
+            }
+        }
+    });
+
+    function renderLiveUpdate(data) {
+        const homeName = data.teams.home.name || "صاحب الأرض";
+        const awayName = data.teams.away.name || "الفريق الضيف";
+        document.getElementById('h-name').innerText = homeName;
+        document.getElementById('a-name').innerText = awayName;
+        document.getElementById('h-column-title').innerText = "أحداث " + homeName;
+        document.getElementById('a-column-title').innerText = "أحداث " + awayName;
+
+        if (data.teams.home.logo) document.getElementById('h-logo').src = data.teams.home.logo;
+        if (data.teams.away.logo) document.getElementById('a-logo').src = data.teams.away.logo;
+
+        const homeStats = data.liveState.stats?.home || {};
+        const awayStats = data.liveState.stats?.away || {};
+
+        updateElement('h-goals', homeStats.goals ?? 0);
+        updateElement('a-goals', awayStats.goals ?? 0);
+
+        updateMatchStats(data.liveState.stats);
+        manageMatchClock(data.liveState.matchPhase, data.liveState.startTimestamp, data.liveState.isPaused, data.liveState.savedDuration);
+        
+     renderLiveTimeline(
+    data.liveState.homeEvents, 
+    data.liveState.awayEvents, 
+    data.teams.home.name, 
+    data.teams.away.name
+);
+    }
+</script>
+
+<script>
+let liveMatchInterval = null;
+
+function updateElement(id, value) {
+    const el = document.getElementById(id);
+    if (el && el.innerText != value) {
+        el.innerText = value;
+        el.classList.add('pulse');
+        setTimeout(() => el.classList.remove('pulse'), 800);
+    }
+}
+
+function updateMatchStats(stats) {
+    if (!stats) return;
+    const h = stats.home || {}; const a = stats.away || {};
+
+    const updateBar = (id, valH, valA, isPercentage = false) => {
+        valH = valH || 0; valA = valA || 0;
+        let total = valH + valA; if (total === 0) total = 1;
+        
+        document.getElementById(`stat-h-${id}`).innerText = valH + (isPercentage ? "%" : "");
+        document.getElementById(`stat-a-${id}`).innerText = valA + (isPercentage ? "%" : "");
+        
+        let percH = isPercentage ? valH : (valH / total) * 100;
+        let percA = isPercentage ? valA : (valA / total) * 100;
+        
+        document.getElementById(`bar-h-${id}`).style.width = `${percH}%`;
+        document.getElementById(`bar-a-${id}`).style.width = `${percA}%`;
+    };
+
+    updateBar('pos', h.possession, a.possession, true);
+    updateBar('att', h.attacks, a.attacks);
+    updateBar('danger', h.danger, a.danger);
+    updateBar('offsides', h.offsides, a.offsides);
+    updateBar('keypass', h.keyPasses, a.keyPasses);
+}
+
+function manageMatchClock(matchPhase, startTimestamp, isPaused, savedDuration) {
+    const clockEl = document.getElementById('main-clock');
+    const labelEl = document.getElementById('timer-label');
+    const scoreWrapper = document.getElementById('score-wrapper');
+    const vsWrapper = document.getElementById('vs-wrapper');
+    const statsWrapper = document.getElementById('stats-wrapper');
+
+    if (liveMatchInterval) { clearInterval(liveMatchInterval); liveMatchInterval = null; }
+
+    vsWrapper.style.display = 'none';
+    scoreWrapper.style.display = 'flex';
+    statsWrapper.style.display = 'block';
+
+    // 🟢 إضافة التعامل مع الحالات غير المباشرة لمنع تجمد الشاشة عند التصفير
+    if (matchPhase === "UPCOMING") {
+        labelEl.innerText = "⏳ المباراة لم تبدأ بعد";
+        clockEl.innerText = "--:--";
+    } else if (matchPhase === "HT") {
+        labelEl.innerText = "☕ استراحة بين الشوطين";
+        clockEl.innerText = "45:00";
+    } else if (matchPhase === "FT") {
+        labelEl.innerText = "🏆 انتهت المباراة رسمياً";
+        clockEl.innerText = "90:00";
+    } else if (matchPhase === "1H" || matchPhase === "2H") {
+        const calculationLogic = () => {
+            let totalSeconds = savedDuration || 0;
+            if (!isPaused && startTimestamp > 0) totalSeconds += Math.floor((Date.now() - startTimestamp) / 1000);
+
+            const currentMinute = Math.floor(totalSeconds / 60) + (matchPhase === "2H" ? 45 : 0);
+            const currentSecond = totalSeconds % 60;
+            const minStr = String(currentMinute).padStart(2, '0');
+            const secStr = String(currentSecond).padStart(2, '0');
+
+            labelEl.innerText = isPaused ? "⏸️ الوقت متوقف" : (matchPhase === "1H" ? "🔴 الشوط الأول مباشر" : "🔴 الشوط الثاني مباشر");
+            clockEl.innerHTML = `<span style="direction: ltr; display: inline-block;">${minStr}:${secStr}</span>`;
+        };
+        calculationLogic();
+        liveMatchInterval = setInterval(calculationLogic, 1000);
+    }
+}
+
+function renderLiveTimeline(homeEvents, awayEvents, homeName, awayName) {
+    const timelineContainer = document.getElementById('events-timeline');
+    if (!timelineContainer) return;
+    
+    // تفريغ الحاوية لبناء الأحداث الجديدة
+    timelineContainer.innerHTML = '';
+    
+    let combinedEvents = [];
+    
+    // دالة مساعدة لتحويل البيانات إلى مصفوفة آمنة (سواء كانت مصفوفة أو كائن من الفايربيس)
+    const parseEvents = (eventsData, type, teamName) => {
+        if (!eventsData) return;
+        const items = Array.isArray(eventsData) ? eventsData : Object.values(eventsData);
+        items.forEach(item => {
+            if (item) {
+                combinedEvents.push({
+                    minute: item.minute || '0',
+                    text: item.text || item.name || '',
+                    teamType: type,
+                    teamName: teamName
+                });
+            }
+        });
+    };
+
+    // جلب الأحداث وتسميتها
+    parseEvents(homeEvents, 'home', homeName);
+    parseEvents(awayEvents, 'away', awayName);
+    
+    // دالة ذكية لترتيب الدقائق حتى مع وجود وقت بدل ضائع (مثل 45+3)
+    const getAbsoluteMinute = (minStr) => {
+        return String(minStr).split('+').reduce((acc, val) => acc + parseInt(val || 0, 10), 0);
+    };
+    
+    // ترتيب الأحداث من الأحدث للأقدم
+    combinedEvents.sort((a, b) => getAbsoluteMinute(b.minute) - getAbsoluteMinute(a.minute));
+    
+    // في حال عدم وجود أحداث حالياً
+    if (combinedEvents.length === 0) {
+        timelineContainer.innerHTML = `<div style="text-align:center; color:#64748b; padding:20px; font-size:0.9rem;">في انتظار انطلاق مجريات المباراة الحية...</div>`;
+        return;
+    }
+    
+    // بناء وحقن عناصر الـ HTML للأحداث
+    combinedEvents.forEach(event => {
+        const eventItem = document.createElement('div');
+        
+        // تحديد لون الخط الجانبي بناءً على نوع الفريق (أرض أم ضيف)
+        const borderColor = event.teamType === 'home' ? 'var(--home-color)' : 'var(--away-color)';
+        
+        eventItem.style.cssText = `
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(255, 255, 255, 0.02);
+            border-right: 4px solid ${borderColor};
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-size: 0.88rem;
+            animation: fadeIn 0.4s ease-out;
+            border-left: 1px solid rgba(255,255,255,0.02);
+        `;
+        
+        eventItem.innerHTML = `
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <span style="color: var(--accent); font-weight: bold; min-width: 45px; text-align: right;">'${event.minute}</span>
+                <span style="color: #e2e8f0; font-weight: 500;">${event.text}</span>
+            </div>
+            <span style="font-size: 0.75rem; color: #94a3b8; background: rgba(0,0,0,0.2); padding: 2px 8px; border-radius: 20px;">
+                ${event.teamName}
+            </span>
+        `;
+        
+        timelineContainer.appendChild(eventItem);
+    });
+}
+// 🔮 الدالة التنفيذية لمفاجأة أوراكل (محدثة بالكامل لتقبل النقل الديناميكي)
+function triggerOracleSurprise(teamType, message) {
+    const matchCard = document.getElementById('main-match-card');
+    const alertBox = document.getElementById('oracle-alert');
+    const msgText = document.getElementById('oracle-msg');
+    
+    // نظف أي توهج قديم أولاً قبل إشعال التوهج الجديد
+    clearOracleGlows();
+
+    // تحديد الفريق المستفيد بناءً على الشرط المصلح
+    const teamBox = teamType === 'home' ? document.getElementById('home-team-box') : document.getElementById('away-team-box');
+    
+    if(msgText) msgText.innerText = message;
+
+    // 1. ضربة اهتزاز للشاشة
+    if(matchCard) {
+        matchCard.classList.add('shake');
+        setTimeout(() => matchCard.classList.remove('shake'), 400);
+    }
+
+    // 2. تفعيل النيون للفريق الصحيح
+    if(teamBox) {
+        teamBox.classList.add(teamType === 'home' ? 'neon-glow-home' : 'neon-glow-away');
+    }
+    
+    // 3. صعود بطاقة التنبؤ
+    if(alertBox) alertBox.classList.add('show');
+}
+
+// دالة تنظيف التوهج وإخفاء البطاقة العائمة
+function clearOracleGlows() {
+    const homeBox = document.getElementById('home-team-box');
+    const awayBox = document.getElementById('away-team-box');
+    const alertBox = document.getElementById('oracle-alert');
+
+    if(homeBox) homeBox.classList.remove('neon-glow-home');
+    if(awayBox) awayBox.classList.remove('neon-glow-away');
+    if(alertBox) alertBox.classList.remove('show');
+}
+
+window.testOracle = function(team = 'home') {
+    triggerOracleSurprise(team, "تحليل أوراكل: رصد إيقاع تكتيكي عالٍ ومؤشر خطورة مرتفع!");
+}
+
+</script>
+</body>
+</html>

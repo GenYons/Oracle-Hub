@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Oracle Hub - لوحة تحكم المحلل</title>
+    <style>
+        :root { --accent: #fbbf24; --bg: #0f172a; --panel-bg: #1e293b; }
+        body { background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        .panel-card { width: 100%; max-width: 500px; background: var(--panel-bg); border-radius: 15px; padding: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.4); margin-bottom: 15px; }
+        h3 { border-bottom: 2px solid rgba(255,255,255,0.1); padding-bottom: 8px; color: var(--accent); margin-top: 0; font-size: 1.1rem; }
+        .control-group { display: flex; justify-content: space-between; align-items: center; margin: 10px 0; }
+        .action-btn { background: #334155; color: white; border: none; padding: 8px 12px; font-weight: bold; cursor: pointer; border-radius: 8px; transition: 0.2s; font-size: 0.85rem; }
+        .action-btn:hover { background: var(--accent); color: black; }
+        .score-val { font-size: 1.5rem; font-weight: bold; color: var(--accent); }
+        .live-clock-badge { font-size: 2.2rem; font-weight: 900; color: var(--accent); text-align: center; margin: 10px 0; letter-spacing: 1px; }
+        .team-section { background: rgba(0,0,0,0.2); padding: 12px; border-radius: 8px; margin-bottom: 5px; border-right: 4px solid var(--accent); }
+        .status-msg { text-align: center; color: #10b981; font-weight: bold; margin-top: 10px; font-size: 0.9rem; min-height: 20px; }
+        .phase-btn-group { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
+        .input-field { width: 95%; padding: 8px; border-radius: 6px; border: 1px solid #334155; background: #0f172a; color: white; margin-top: 4px; font-size: 0.85rem; }
+        .identity-row { display: flex; gap: 10px; align-items: center; margin-top: 5px; }
+        .preview-img { width: 45px; height: 45px; object-fit: contain; background: rgba(0,0,0,0.3); border-radius: 8px; padding: 3px; border: 1px solid #334155; }
+    </style>
+</head>
+<body>
+
+    <div class="panel-card">
+        <h3>✏️ إعدادات أسماء وشعارات الفرق</h3>
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+            <div>
+                <label style="font-size: 0.8rem; color: #94a3b8;">صاحب الأرض:</label>
+                <div class="identity-row">
+                    <input type="text" id="input-home-name" placeholder="اسم فريق الأرض" class="input-field" style="margin-top:0;">
+                    <img id="preview-home-logo" class="preview-img" src="" alt="🏟️">
+                </div>
+                <input type="text" id="input-home-logo" placeholder="اسم ملف الشعار (مثال: maroc.png)" class="input-field" oninput="document.getElementById('preview-home-logo').src = this.value">
+            </div>
+            <div style="border-top: 1px solid rgba(255,255,255,0.05); padding-top: 8px;">
+                <label style="font-size: 0.8rem; color: #94a3b8;">الفريق الضيف:</label>
+                <div class="identity-row">
+                    <input type="text" id="input-away-name" placeholder="اسم فريق الضيف" class="input-field" style="margin-top:0;">
+                    <img id="preview-away-logo" class="preview-img" src="" alt="🏟️">
+                </div>
+                <input type="text" id="input-away-logo" placeholder="اسم ملف الشعار (مثال: brazil.png)" class="input-field" oninput="document.getElementById('preview-away-logo').src = this.value">
+            </div>
+            <button class="action-btn" style="background: #10b981; margin-top: 5px;" onclick="updateTeamIdentity()">تحديث الهوية والشعارات سحابياً 🔄</button>
+        </div>
+    </div>
+
+    <div class="panel-card">
+        <h3>⏱️ ساعة المباراة والتحكم في الوقت</h3>
+        <div id="panel-clock-display" class="live-clock-badge">--:--</div>
+
+        <div class="phase-btn-group">
+            <button class="action-btn" style="background: #10b981;" onclick="startFirstHalf()">صافرة الشوط 1 🏁</button>
+            <button class="action-btn" style="background: #ef4444;" onclick="startHalfTime()">استراحة بين الشوطين ☕</button>
+            <button class="action-btn" style="background: #3b82f6;" onclick="startSecondHalf()">صافرة الشوط 2 🔥</button>
+            <button class="action-btn" style="background: #64748b;" onclick="endMatchFullTime()">صافرة النهاية 🏆</button>
+        </div>
+
+        <div style="display: flex; gap: 10px; margin-top: 10px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px;">
+            <button class="action-btn" style="flex: 1; background: #e11d48;" onclick="togglePauseClock()">إيقاف / استئناف مؤقت ⏸️▶️</button>
+        </div>
+    </div>
+
+    <div class="panel-card">
+        <h3 id="h-title-panel">صاحب الأرض</h3>
+        <div class="team-section">
+            <div class="control-group">
+                <span>الأهداف: <span id="panel-home-goals" class="score-val">0</span></span>
+                <div>
+                    <button class="action-btn" onclick="changeScore('home', -1)">-</button>
+                    <button class="action-btn" onclick="changeScore('home', 1)">+</button>
+                </div>
+            </div>
+            <div class="control-group" style="border-top: 1px solid rgba(255,255,255,0.05); padding-top: 8px;">
+                <span>الهجمات: <span id="panel-home-att" style="color:white; font-weight:bold;">0</span></span>
+                <div>
+                    <button class="action-btn" onclick="changeStat('home', 'attacks', -1)">-</button>
+                    <button class="action-btn" onclick="changeStat('home', 'attacks', 1)">+1 هجمة</button>
+                </div>
+            </div>
+            <div class="control-group">
+                <span>خطيرة: <span id="panel-home-danger" style="color:white; font-weight:bold;">0</span></span>
+                <div>
+                    <button class="action-btn" onclick="changeStat('home', 'danger', -1)">-</button>
+                    <button class="action-btn" onclick="changeStat('home', 'danger', 1)">+1 خطيرة</button>
+                </div>
+            </div>
+            <div class="control-group">
+                <span>🏁 التسلل: <span id="panel-home-offsides" style="color:white; font-weight:bold;">0</span></span>
+                <div>
+                    <button class="action-btn" onclick="changeStat('home', 'offsides', -1)">-</button>
+                    <button class="action-btn" onclick="changeStat('home', 'offsides', 1)">+1 تسلل</button>
+                </div>
+            </div>
+            <div class="control-group">
+                <span>🔑 تمريرات مفتاحية: <span id="panel-home-keypass" style="color:white; font-weight:bold;">0</span></span>
+                <div>
+                    <button class="action-btn" onclick="changeStat('home', 'keyPasses', -1)">-</button>
+                    <button class="action-btn" onclick="changeStat('home', 'keyPasses', 1)">+1 مفتاحية</button>
+                </div>
+            </div>
+            <div class="control-group">
+                <span>البطاقات الحمراء: <span id="panel-home-red" style="color:#ef4444; font-weight:bold;">0</span></span>
+                <div>
+                    <button class="action-btn" onclick="changeStat('home', 'redCards', -1)">-</button>
+                    <button class="action-btn" onclick="changeStat('home', 'redCards', 1)">+1 حمراء 🟥</button>
+                </div>
+            </div>
+
+            <div class="control-group">
+                <span>الاستحواذ: <span id="panel-home-pos" style="color:white; font-weight:bold;">50%</span></span>
+                <input type="range" min="10" max="90" value="50" id="pos-slider" style="width:120px;" oninput="adjustPossession(this.value)">
+            </div>
+            <div style="display:flex; gap:4px; margin-top: 10px;">
+                <button class="action-btn" style="flex:1;" onclick="injectQuickEvent('home', 'هدف جديد لصالح الفريق')">⚽ هدف</button>
+                <button class="action-btn" style="flex:1;" onclick="injectQuickEvent('home', 'ركنية من الجانب الأيمن')">🚩 ركنية</button>
+                <button class="action-btn" style="flex:1;" onclick="injectQuickEvent('home', 'بطاقة صفراء نتيجة تدخل')">🟨 بطاقة</button>
+                <button class="action-btn" style="flex:1;" onclick="injectQuickEvent('home', 'بطاقة حمراء وطرد من الملعب 🟥')">🟥 طرد</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="panel-card">
+        <h3 id="a-title-panel">الفريق الضيف</h3>
+        <div class="team-section" style="border-right-color:#ef4444;">
+            <div class="control-group">
+                <span>الأهداف: <span id="panel-away-goals" class="score-val">0</span></span>
+                <div>
+                    <button class="action-btn" onclick="changeScore('away', -1)">-</button>
+                    <button class="action-btn" onclick="changeScore('away', 1)">+</button>
+                </div>
+            </div>
+            <div class="control-group" style="border-top: 1px solid rgba(255,255,255,0.05); padding-top: 8px;">
+                <span>الهجمات: <span id="panel-away-att" style="color:white; font-weight:bold;">0</span></span>
+                <div>
+                    <button class="action-btn" onclick="changeStat('away', 'attacks', -1)">-</button>
+                    <button class="action-btn" onclick="changeStat('away', 'attacks', 1)">+1 هجمة</button>
+                </div>
+            </div>
+            <div class="control-group">
+                <span>خطيرة: <span id="panel-away-danger" style="color:white; font-weight:bold;">0</span></span>
+                <div>
+                    <button class="action-btn" onclick="changeStat('away', 'danger', -1)">-</button>
+                    <button class="action-btn" onclick="changeStat('away', 'danger', 1)">+1 خطيرة</button>
+                </div>
+            </div>
+            <div class="control-group">
+                <span>🏁 التسلل: <span id="panel-away-offsides" style="color:white; font-weight:bold;">0</span></span>
+                <div>
+                    <button class="action-btn" onclick="changeStat('away', 'offsides', -1)">-</button>
+                    <button class="action-btn" onclick="changeStat('away', 'offsides', 1)">+1 تسلل</button>
+                </div>
+            </div>
+            <div class="control-group">
+                <span>🔑 تمريرات مفتاحية: <span id="panel-away-keypass" style="color:white; font-weight:bold;">0</span></span>
+                <div>
+                    <button class="action-btn" onclick="changeStat('away', 'keyPasses', -1)">-</button>
+                    <button class="action-btn" onclick="changeStat('away', 'keyPasses', 1)">+1 مفتاحية</button>
+                </div>
+            </div>
+            <div class="control-group">
+                <span>البطاقات الحمراء: <span id="panel-away-red" style="color:#ef4444; font-weight:bold;">0</span></span>
+                <div>
+                    <button class="action-btn" onclick="changeStat('away', 'redCards', -1)">-</button>
+                    <button class="action-btn" onclick="changeStat('away', 'redCards', 1)">+1 حمراء 🟥</button>
+                </div>
+            </div>
+
+            <div style="display:flex; gap:4px; margin-top: 15px;">
+                <button class="action-btn" style="flex:1;" onclick="injectQuickEvent('away', 'هدف جديد لصالح الفريق')">⚽ هدف</button>
+                <button class="action-btn" style="flex:1;" onclick="injectQuickEvent('away', 'ركنية من الجانب الأيمن')">🚩 ركنية</button>
+                <button class="action-btn" style="flex:1;" onclick="injectQuickEvent('away', 'بطاقة صفراء نتيجة تدخل')">🟨 بطاقة</button>
+                <button class="action-btn" style="flex:1;" onclick="injectQuickEvent('away', 'بطاقة حمراء وطرد من الملعب 🟥')">🟥 طرد</button>
+            </div>
+        </div>
+    </div>
+<div class="panel-card" style="margin-top: 15px; border-top: 2px solid #a855f7;">
+    <h3 style="color: #c084fc; text-align: center;">🔮 نظام تحكم أوراكل (الوميض)</h3>
+    
+    <div style="display: flex; gap: 8px; margin-top: 15px;">
+        <button class="action-btn" onclick="sendOraclePrediction('home')" style="background: #ef4444; flex: 1; font-weight: bold; color: white;">
+            💥 وميض (المغرب)
+        </button>
+        <button class="action-btn" onclick="sendOraclePrediction('away')" style="background: #3b82f6; flex: 1; font-weight: bold; color: white;">
+            💥 وميض (البرازيل)
+        </button>
+    </div>
+    
+    <div style="margin-top: 10px;">
+        <button class="action-btn" onclick="clearOraclePrediction()" style="background: #475569; width: 100%; font-weight: bold; color: white;">
+            🔄 إيقاف التنبيه وإعادة الوضع المستقر
+        </button>
+    </div>
+</div>
+    <div id="status-notification" class="status-msg"></div>
+    <button class="action-btn" style="background:#ef4444; width:100%; max-width:500px; margin-bottom: 30px;" onclick="resetMatch()">🔄 تصفير المباراة بالكامل وإعادة العداد</button>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js";
+    import { getDatabase, ref, set, get, update } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyC60jXVfotAhIWv58XWnun-Nr-8ZfM2Eiw",
+      authDomain: "oracle-hub-98076.firebaseapp.com",
+      databaseURL: "https://oracle-hub-98076-default-rtdb.firebaseio.com",
+      projectId: "oracle-hub-98076",
+      storageBucket: "oracle-hub-98076.firebasestorage.app",
+      messagingSenderId: "21077655862",
+      appId: "1:21077655862:web:d59c03b0d6a78f61243397",
+      measurementId: "G-BGPFQ8V7TZ"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    const matchRef = ref(db, 'oracle_test_match');
+
+    // ─── محرك المزامنة السحابية الموحد ───
+    function sync() {
+        if (!window.currentData) return;
+        window.currentData.admin_token = "OracleAdmin2026"; 
+
+        set(matchRef, window.currentData)
+        .then(() => { console.log("✅ تم التحديث والرفع إلى Firebase بنجاح!"); })
+        .catch(error => {
+            console.error("❌ Firebase رفض التعديل! السبب:", error.message);
+            showStatus("خطأ في الصلاحيات: تأكد من إعدادات الـ Rules");
+        });
+    }
+
+    window.initPanel = async function() {
+        try {
+            const snapshot = await get(matchRef);
+            let currentData = null;
+
+            if(snapshot.exists()) {
+                currentData = snapshot.val();
+
+                if(!currentData.liveState) currentData.liveState = {};
+                if(currentData.liveState.startTimestamp === undefined) currentData.liveState.startTimestamp = 0;
+                if(currentData.liveState.isPaused === undefined) currentData.liveState.isPaused = false;
+                if(currentData.liveState.savedDuration === undefined) currentData.liveState.savedDuration = 0;
+
+                if(!currentData.liveState.stats) currentData.liveState.stats = { home: {}, away: {} };
+                if(!currentData.liveState.stats.home) currentData.liveState.stats.home = {};
+                if(!currentData.liveState.stats.away) currentData.liveState.stats.away = {};
+
+                if(!currentData.liveState.stats.home.offsides) currentData.liveState.stats.home.offsides = 0;
+                if(!currentData.liveState.stats.away.offsides) currentData.liveState.stats.away.offsides = 0;
+                if(!currentData.liveState.stats.home.keyPasses) currentData.liveState.stats.home.keyPasses = 0;
+                if(!currentData.liveState.stats.away.keyPasses) currentData.liveState.stats.away.keyPasses = 0;
+                if(!currentData.liveState.stats.home.corners) currentData.liveState.stats.home.corners = 0;
+                if(!currentData.liveState.stats.away.corners) currentData.liveState.stats.away.corners = 0;
+            } else {
+                currentData = {
+                    teams: { 
+                        home: { name: "Brésil", logo: "brazil.png" }, 
+                        away: { name: "Maroc", logo: "maroc.png" } 
+                    },
+                    liveState: {
+                        matchPhase: "UPCOMING",
+                        clock: 0,
+                        startTimestamp: 0,
+                        isPaused: false,
+                        savedDuration: 0,
+                        stats: { 
+                            home: { goals: 0, possession: 50, attacks: 0, danger: 0, offsides: 0, keyPasses: 0, corners: 0, redCards: 0 }, 
+                            away: { goals: 0, possession: 50, attacks: 0, danger: 0, offsides: 0, keyPasses: 0, corners: 0, redCards: 0 } 
+                        },
+                        homeEvents: [],
+                        awayEvents: []
+                    }
+                };
+            }
+
+            currentData.admin_token = "OracleAdmin2026";
+            window.currentData = currentData; 
+
+            document.getElementById('h-title-panel').innerText = currentData.teams.home.name || "صاحب الأرض";
+            document.getElementById('a-title-panel').innerText = currentData.teams.away.name || "الفريق الضيف";
+            document.getElementById('input-home-name').value = currentData.teams.home.name || "";
+            document.getElementById('input-home-logo').value = currentData.teams.home.logo || "";
+            document.getElementById('input-away-name').value = currentData.teams.away.name || "";
+            document.getElementById('input-away-logo').value = currentData.teams.away.logo || "";
+            
+            if(currentData.teams.home.logo) document.getElementById('preview-home-logo').src = currentData.teams.home.logo;
+            if(currentData.teams.away.logo) document.getElementById('preview-away-logo').src = currentData.teams.away.logo;
+
+            startLocalPanelClock();
+        } catch (error) {
+            showStatus("خطأ في جلب البيانات: " + error.message);
+        }
+    }
+
+    window.updateTeamIdentity = function() {
+        if (!window.currentData) return;
+        if (!window.currentData.teams) window.currentData.teams = { home: {}, away: {} };
+        
+        window.currentData.teams.home.name = document.getElementById('input-home-name').value.trim() || "صاحب الأرض";
+        window.currentData.teams.home.logo = document.getElementById('input-home-logo').value.trim();
+        window.currentData.teams.away.name = document.getElementById('input-away-name').value.trim() || "الفريق الضيف";
+        window.currentData.teams.away.logo = document.getElementById('input-away-logo').value.trim();
+
+        document.getElementById('h-title-panel').innerText = window.currentData.teams.home.name;
+        document.getElementById('a-title-panel').innerText = window.currentData.teams.away.name;
+
+        document.getElementById('preview-home-logo').src = window.currentData.teams.home.logo;
+        document.getElementById('preview-away-logo').src = window.currentData.teams.away.logo;
+
+        showStatus("✏️ تم تحديث أسماء وشعارات الهوية سحابياً بنجاح!");
+        sync();
+    }
+
+    window.resetMatch = function() {
+        try {
+            let cleanZeroData = {
+                teams: { home: { name: "Brésil", logo: "brazil.png" }, away: { name: "Maroc", logo: "maroc.png" } },
+                liveState: {
+                    matchPhase: "UPCOMING",
+                    clock: 0,
+                    startTimestamp: 0,
+                    isPaused: false,
+                    savedDuration: 0,
+                    stats: { 
+                        home: { goals: 0, possession: 50, attacks: 0, danger: 0, offsides: 0, keyPasses: 0, corners: 0, redCards: 0 }, 
+                        away: { goals: 0, possession: 50, attacks: 0, danger: 0, offsides: 0, keyPasses: 0, corners: 0, redCards: 0 } 
+                    },
+                    homeEvents: [],
+                    awayEvents: []
+                },
+                admin_token: "OracleAdmin2026"
+            };
+
+            window.currentData = cleanZeroData;
+            set(matchRef, cleanZeroData).then(() => {
+                document.getElementById('input-home-name').value = "Brésil";
+                document.getElementById('input-home-logo').value = "brazil.png";
+                document.getElementById('input-away-name').value = "Maroc";
+                document.getElementById('input-away-logo').value = "maroc.png";
+                document.getElementById('preview-home-logo').src = "brazil.png";
+                document.getElementById('preview-away-logo').src = "maroc.png";
+                showStatus("🔄 تم تصفير المنظومة بنجاح واعتماد مباراة البرازيل والمغرب سحابياً!");
+            }).catch(err => { showStatus("فشل إعادة التعيين السحابي"); });
+        } catch(e) { showStatus("فشل إعادة التعيين محلياً"); }
+    }
+
+    // ─── محرك واجهة التحكم الفرعي المدمج ───
+    let panelUIInterval = null;
+    function startLocalPanelClock() {
+        if (panelUIInterval) clearInterval(panelUIInterval);
+        panelUIInterval = setInterval(() => {
+            let currentData = window.currentData;
+            if (!currentData) return;
+
+            document.getElementById('panel-home-goals').innerText = currentData.liveState.stats.home.goals || 0;
+            document.getElementById('panel-away-goals').innerText = currentData.liveState.stats.away.goals || 0;
+            document.getElementById('panel-home-att').innerText = currentData.liveState.stats.home.attacks || 0;
+            document.getElementById('panel-away-att').innerText = currentData.liveState.stats.away.attacks || 0;
+            document.getElementById('panel-home-danger').innerText = currentData.liveState.stats.home.danger || 0;
+            document.getElementById('panel-away-danger').innerText = currentData.liveState.stats.away.danger || 0;
+            document.getElementById('panel-home-offsides').innerText = currentData.liveState.stats.home.offsides || 0;
+            document.getElementById('panel-away-offsides').innerText = currentData.liveState.stats.away.offsides || 0;
+            document.getElementById('panel-home-keypass').innerText = currentData.liveState.stats.home.keyPasses || 0;
+            document.getElementById('panel-away-keypass').innerText = currentData.liveState.stats.away.keyPasses || 0;
+            document.getElementById('panel-home-red').innerText = currentData.liveState.stats.home.redCards || 0;
+            document.getElementById('panel-away-red').innerText = currentData.liveState.stats.away.redCards || 0;
+
+            // تحديث عداد الركنيات اختياريًا في الواجهة إذا وُجد العنصر
+            if(document.getElementById('panel-home-corner')) document.getElementById('panel-home-corner').innerText = currentData.liveState.stats.home.corners || 0;
+            if(document.getElementById('panel-away-corner')) document.getElementById('panel-away-corner').innerText = currentData.liveState.stats.away.corners || 0;
+
+            const hPos = currentData.liveState.stats.home.possession || 50;
+            document.getElementById('panel-home-pos').innerText = hPos + "%";
+            document.getElementById('pos-slider').value = hPos;
+
+            const phase = currentData.liveState.matchPhase || "UPCOMING";
+            const clockDisplay = document.getElementById('panel-clock-display');
+
+            if (phase === "UPCOMING") clockDisplay.innerText = "⏳ قريباً";
+            else if (phase === "HT") clockDisplay.innerText = "☕ استراحة";
+            else if (phase === "FT") clockDisplay.innerText = "🏆 انتهت";
+            else if (phase === "1H" || phase === "2H") {
+                let totalSeconds = currentData.liveState.savedDuration || 0;
+                if (!currentData.liveState.isPaused && currentData.liveState.startTimestamp > 0) {
+                    totalSeconds += Math.floor((Date.now() - currentData.liveState.startTimestamp) / 1000);
+                }
+                const calculatedMinute = Math.floor(totalSeconds / 60) + (phase === "2H" ? 45 : 0);
+                const currentSecond = totalSeconds % 60;
+                currentData.liveState.clock = calculatedMinute;
+                clockDisplay.innerText = `${String(calculatedMinute).padStart(2, '0')} : ${String(currentSecond).padStart(2, '0')}`;
+            }
+        }, 1000);
+    }
+
+    window.startFirstHalf = function() {
+        if (!window.currentData) return;
+        window.currentData.liveState.matchPhase = "1H";
+        window.currentData.liveState.isPaused = false;
+        window.currentData.liveState.savedDuration = 0;
+        window.currentData.liveState.startTimestamp = Date.now();
+        showStatus("🏁 انطلق الشوط الأول مباشر!");
+        sync();
+    }
+
+    window.startHalfTime = function() {
+        if (!window.currentData) return;
+        window.currentData.liveState.matchPhase = "HT";
+        window.currentData.liveState.isPaused = true;
+        window.currentData.liveState.savedDuration = 45 * 60;
+        window.currentData.liveState.startTimestamp = 0;
+        showStatus("☕ تم بدء فترة الاستراحة.");
+        sync();
+    }
+
+    window.startSecondHalf = function() {
+        if (!window.currentData) return;
+        window.currentData.liveState.matchPhase = "2H";
+        window.currentData.liveState.isPaused = false;
+        window.currentData.liveState.savedDuration = 0;
+        window.currentData.liveState.startTimestamp = Date.now(); 
+        showStatus("🔥 انطلق الشوط الثاني مباشر!");
+        sync();
+    }
+
+    window.endMatchFullTime = function() {
+        if (!window.currentData) return;
+        window.currentData.liveState.matchPhase = "FT";
+        window.currentData.liveState.isPaused = true;
+        window.currentData.liveState.startTimestamp = 0;
+        window.currentData.liveState.savedDuration = 45 * 60;
+        showStatus("🏆 انتهت المباراة رسمياً.");
+        sync();
+    }
+
+    window.togglePauseClock = function() {
+        let currentData = window.currentData;
+        if (!currentData || ["UPCOMING", "HT", "FT"].includes(currentData.liveState.matchPhase)) return;
+        if (!currentData.liveState.isPaused) {
+            currentData.liveState.savedDuration += Math.floor((Date.now() - currentData.liveState.startTimestamp) / 1000);
+            currentData.liveState.isPaused = true;
+            currentData.liveState.startTimestamp = 0;
+            showStatus("⏸️ تم إيقاف الوقت مؤقتاً.");
+        } else {
+            currentData.liveState.startTimestamp = Date.now();
+            currentData.liveState.isPaused = false;
+            showStatus("▶️ تم استئناف اللعب وعودة العداد.");
+        }
+        sync();
+    }
+
+    window.changeScore = function(team, amount) {
+        if (!window.currentData) return;
+        window.currentData.liveState.stats[team].goals = Math.max(0, (window.currentData.liveState.stats[team].goals || 0) + amount);
+        sync();
+    }
+
+    // ─── 🎯 تلقيح وحقن محرك الأحداث التنبؤية ───
+    window.changeStat = function(team, statKey, amount) {
+        if (!window.currentData) return;
+        if (!window.currentData.liveState.stats[team]) window.currentData.liveState.stats[team] = {};
+        
+        // تحديث قيمة الإحصائية الرقمية أولاً للإبقاء على لوحتك مستقرة
+        window.currentData.liveState.stats[team][statKey] = Math.max(0, (window.currentData.liveState.stats[team][statKey] || 0) + amount);
+        
+        // إذا قمت بزيادة الإحصائية (+1) نصنع فوراً حدثاً ذكياً للمحرك التنبؤي في بايثون
+        if (amount > 0) {
+            let eventType = null;
+            let label = "";
+            
+            // مطابقة المفاتيح البرمجية مع الأوزان المعتمدة في السيرفر
+            if (statKey === 'danger') { eventType = 'danger_attack'; label = "هجمة خطيرة 🔥"; }
+            else if (statKey === 'attacks') { eventType = 'attack'; label = "هجمة واعدة 🏃‍♂️"; }
+            else if (statKey === 'offsides') { eventType = 'offside'; label = "تسلل 🏁"; }
+            else if (statKey === 'keyPasses') { eventType = 'key_pass'; label = "تمريرة مفتاحية 🔑"; }
+            else if (statKey === 'corners' || statKey === 'corner') { eventType = 'corner'; label = "ركنية 🚩"; }
+
+            if (eventType) {
+                // التأكد من تهيئة المصفوفات لتفادي أي خطأ
+                if (!window.currentData.liveState.homeEvents) window.currentData.liveState.homeEvents = [];
+                if (!window.currentData.liveState.awayEvents) window.currentData.liveState.awayEvents = [];
+
+                const currentClock = window.currentData.liveState.clock || 0;
+                const phase = window.currentData.liveState.matchPhase || "1H";
+                
+                // حساب صيغة الدقيقة النصية لشاشة العرض والجدول الزمني
+                let displayMinute = `${currentClock}'`;
+                if (phase === "1H" && currentClock > 45) displayMinute = `45'+${currentClock - 45}`;
+                if (phase === "2H" && currentClock > 90) displayMinute = `90'+${currentClock - 90}`;
+
+                const teamName = team === 'home' ? window.currentData.teams.home.name : window.currentData.teams.away.name;
+                
+                // هيكل الكائن المزدوج: رقمي نقي للبايثون + نصي وصفي للـ UI
+                const eventObject = {
+                    type: eventType,
+                    minute: currentClock, 
+                    displayMinute: displayMinute, 
+                    description: `${label} (${teamName})`
+                };
+
+                if (team === 'home') window.currentData.liveState.homeEvents.push(eventObject);
+                else window.currentData.liveState.awayEvents.push(eventObject);
+                
+                console.log(`🔮 [المحرك] تم حقن حدث ذكي: ${eventType} في الدقيقة ${currentClock}`);
+            }
+        }
+        sync();
+    }
+
+    window.injectQuickEvent = function(team, baseDescription) {
+        let currentData = window.currentData;
+        if (!currentData) return;
+        if(!currentData.liveState.homeEvents) currentData.liveState.homeEvents = [];
+        if(!currentData.liveState.awayEvents) currentData.liveState.awayEvents = [];
+
+        const currentClock = currentData.liveState.clock || 0;
+        const phase = currentData.liveState.matchPhase || "1H";
+        let displayMinute = `${currentClock}'`;
+
+        if (phase === "1H" && currentClock > 45) displayMinute = `45'+${currentClock - 45}`;
+        if (phase === "2H" && currentClock > 90) displayMinute = `90'+${currentClock - 90}`;
+
+        const eventObject = {
+            minute: displayMinute,
+            description: `${baseDescription} (${team === 'home' ? currentData.teams.home.name : currentData.teams.away.name})`
+        };
+
+        if (team === 'home') window.currentData.liveState.homeEvents.push(eventObject);
+        else window.currentData.liveState.awayEvents.push(eventObject);
+        showStatus(`⚽ تم بث حدث لايف في الدقيقة (${displayMinute})`);
+        sync();
+    }
+// دالة إرسال التنبؤ السحابي
+     window.sendOraclePrediction = function(team) {
+    const predictionRef = ref(db, 'oracle_test_match/prediction');
+    update(predictionRef, {
+        isImminent: true,
+        targetTeam: team
+    }).then(() => {
+        console.log(`🎯 تم إرسال نبضة أوراكل للفريق: ${team}`);
+    });
+}
+
+// دالة تصفير التنبيه وإعادة الوضع الطبيعي
+     window.clearOraclePrediction = function() {
+    const predictionRef = ref(db, 'oracle_test_match/prediction');
+    update(predictionRef, {
+        isImminent: false,
+        targetTeam: ''
+    }).then(() => {
+        console.log("🔄 تم إعادة لوحة الجمهور للوضع المستقر");
+    });
+}
+    function showStatus(msg) { document.getElementById('status-notification').innerText = msg; }
+
+    initPanel();
+</script>
+</body>
+</html>
